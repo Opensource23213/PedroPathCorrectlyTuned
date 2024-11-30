@@ -32,7 +32,8 @@ public class ForwardTuner extends OpMode {
 
     private Telemetry telemetryA;
 
-    public static double DISTANCE = 48;
+    public static double DISTANCE = 124.5;
+
 
     /**
      * This initializes the PoseUpdater as well as the FTC Dashboard telemetry.
@@ -61,7 +62,7 @@ public class ForwardTuner extends OpMode {
 
         telemetryA.addData("distance moved", poseUpdater.getPose().getX());
         telemetryA.addLine("The multiplier will display what your forward ticks to inches should be to scale your current distance to " + DISTANCE + " inches.");
-        telemetryA.addData("multiplier", DISTANCE / (poseUpdater.getPose().getX() / poseUpdater.getLocalizer().getForwardMultiplier()));
+        telemetryA.addData("multiplier","%4.222222222222222222f", DISTANCE / (poseUpdater.getPose().getX() / poseUpdater.getLocalizer().getForwardMultiplier()));
         telemetryA.update();
 
         Drawing.drawPoseHistory(dashboardPoseTracker, "#4CAF50");

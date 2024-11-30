@@ -6,6 +6,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.PoseUpdater;
@@ -33,7 +34,11 @@ public class TurnTuner extends OpMode {
 
     private Telemetry telemetryA;
 
-    public static double ANGLE = 2 * Math.PI;
+    public static double ANGLE = 8 * Math.PI;
+    public DcMotor front_left = null;
+    public DcMotor rear_left = null;
+    public DcMotor front_right = null;
+    public DcMotor rear_right = null;
 
     /**
      * This initializes the PoseUpdater as well as the FTC Dashboard telemetry.
@@ -43,7 +48,10 @@ public class TurnTuner extends OpMode {
         poseUpdater = new PoseUpdater(hardwareMap);
 
         dashboardPoseTracker = new DashboardPoseTracker(poseUpdater);
-
+        front_left = hardwareMap.get(DcMotor.class, "front_left");
+        front_right = hardwareMap.get(DcMotor.class, "front_right");
+        rear_left = hardwareMap.get(DcMotor.class, "rear_left");
+        rear_right = hardwareMap.get(DcMotor.class, "rear_right");
         telemetryA = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
         telemetryA.addLine("Turn your robot " + ANGLE + " radians. Your turn ticks to inches will be shown on the telemetry.");
         telemetryA.update();
@@ -59,10 +67,13 @@ public class TurnTuner extends OpMode {
     @Override
     public void loop() {
         poseUpdater.update();
-
-        telemetryA.addData("total angle", poseUpdater.getTotalHeading());
-        telemetryA.addLine("The multiplier will display what your turn ticks to inches should be to scale your current angle to " + ANGLE + " radians.");
-        telemetryA.addData("multiplier", ANGLE / (poseUpdater.getTotalHeading() / poseUpdater.getLocalizer().getTurningMultiplier()));
+        front_left.setPower(gamepad1.left_stick_x);
+        rear_left.setPower(gamepad1.left_stick_x);
+        front_right.setPower(gamepad1.left_stick_x);
+        rear_right.setPower(gamepad1.left_stick_x);
+        telemetryA.addData("total angle", Math.toDegrees(poseUpdater.getTotalHeading()));
+        telemetryA.addLine("The multiplier will display what your turn ticks to inches should be to scale your current angle to " + Math.toDegrees(ANGLE) + " degrees.");
+        telemetryA.addData("multiplier","%4.22222222222222f", ANGLE / (poseUpdater.getTotalHeading() / poseUpdater.getLocalizer().getTurningMultiplier()));
 
         Drawing.drawPoseHistory(dashboardPoseTracker, "#4CAF50");
         Drawing.drawRobot(poseUpdater.getPose(), "#4CAF50");
