@@ -147,7 +147,7 @@ public class Score5Auto extends OpMode {
     /**
      * This initializes the Follower and creates the forward and backward Paths. Additionally, this
      * initializes the FTC Dashboard telemetry.
-     */
+     */ do you want to
     @Override
     public void init() {
         follower = new Follower(hardwareMap);
@@ -156,32 +156,32 @@ public class Score5Auto extends OpMode {
         forwards.setConstantHeadingInterpolation(0);
         backwards = new Path(new BezierLine(new Point(DISTANCE,0, Point.CARTESIAN), new Point(0,0, Point.CARTESIAN)));
         backwards.setConstantHeadingInterpolation(0);
-        score1 = new Path(new BezierLine(new Point(0, 0, Point.CARTESIAN), new Point(26, 14, Point.CARTESIAN)));
+        score1 = new Path(new BezierCurve(new Point(3.4, 3.7, Point.CARTESIAN), new Point(10.8, 7.3, Point.CARTESIAN), new Point(20.8, 12.1, Point.CARTESIAN), new Point(28, 12.9, Point.CARTESIAN)));
         score1.setConstantHeadingInterpolation(0);
-        push1 = new Path(new BezierCurve(new Point(28, 14, Point.CARTESIAN), new Point(27.4, 11.4, Point.CARTESIAN), new Point(23.8, 5.2, Point.CARTESIAN), new Point(22, 1.1, Point.CARTESIAN), new Point(21.8, -7.4, Point.CARTESIAN), new Point(22.9, -16, Point.CARTESIAN)));
+        push1 = new Path(new BezierCurve(new Point(31, 12.9, Point.CARTESIAN), new Point(25.3, 10, Point.CARTESIAN), new Point(22.8, 1.8, Point.CARTESIAN), new Point(23.2, -12.7, Point.CARTESIAN)));
         push1.setConstantHeadingInterpolation(0);
-        push1ish = new Path(new BezierCurve(new Point(22.9, -16, Point.CARTESIAN), new Point(28.2, -23, Point.CARTESIAN),new Point(33.2, -23, Point.CARTESIAN),new Point(39, -23, Point.CARTESIAN), new Point(42.1, -23, Point.CARTESIAN), new Point(46.9, -23.9, Point.CARTESIAN)));
+        push1ish = new Path(new BezierCurve(new Point(23.2, -12.7, Point.CARTESIAN), new Point(27.3, -19.5, Point.CARTESIAN), new Point(30.9, -22.6, Point.CARTESIAN), new Point(47.1, -24.2, Point.CARTESIAN)));
         push1ish.setConstantHeadingInterpolation(0);
-        push1ish2 = new Path(new BezierCurve(new Point(46.9, -23.9, Point.CARTESIAN), new Point(50, -25, Point.CARTESIAN), new Point(50, -35.5, Point.CARTESIAN), new Point(42.6, -35.3, Point.CARTESIAN), new Point(32, -35.3, Point.CARTESIAN), new Point(25, -35.3, Point.CARTESIAN), new Point(18, -35.3, Point.CARTESIAN)));
+        push1ish2 = new Path(new BezierCurve(new Point(47.1, -24.2, Point.CARTESIAN), new Point(49.6, -31.3, Point.CARTESIAN), new Point(37.8, -31.3, Point.CARTESIAN), new Point(13, -31, Point.CARTESIAN)));
         push1ish2.setConstantHeadingInterpolation(0);
-        push2 = new Path(new BezierCurve(new Point(2.1, -31, Point.CARTESIAN), new Point(20, -31.3, Point.CARTESIAN), new Point(34, -31, Point.CARTESIAN), new Point(44.6, -31.3, Point.CARTESIAN), new Point(46, -36.9, Point.CARTESIAN)));
-        push2ish = new Path(new BezierCurve(new Point(46, -36.9, Point.CARTESIAN), new Point(45.4, -42.3, Point.CARTESIAN), new Point(43.3, -44.3, Point.CARTESIAN), new Point(14.8, -41.2, Point.CARTESIAN)));
+        push2 = new Path(new BezierCurve(new Point(13, -31, Point.CARTESIAN), new Point(20, -31, Point.CARTESIAN), new Point(30, -31, Point.CARTESIAN), new Point(43.9, -32.7, Point.CARTESIAN), new Point(48.3, -34.6, Point.CARTESIAN), new Point(48.5, -39.3, Point.CARTESIAN)));
+        push2ish = new Path(new BezierCurve(new Point(48.5, -39.3, Point.CARTESIAN), new Point(34, -40.2, Point.CARTESIAN), new Point(12.8, -38.9, Point.CARTESIAN)));
         push2.setConstantHeadingInterpolation(0);
         push2ish.setConstantHeadingInterpolation(0);
-        push3 = new Path(new BezierCurve(new Point(19.5, -42.2, Point.CARTESIAN), new Point(27, -41, Point.CARTESIAN), new Point(34, -38, Point.CARTESIAN), new Point(42.1, -37.5, Point.CARTESIAN), new Point(52, -38, Point.CARTESIAN), new Point(53, -39, Point.CARTESIAN)));
+        push3 = new Path(new BezierCurve(new Point(23.6, -37.5, Point.CARTESIAN), new Point(45.7, -38, Point.CARTESIAN), new Point(47.4, -42.2, Point.CARTESIAN)));
         push3.setLinearHeadingInterpolation(0,Math.toRadians(180));
-        push3ish = new Path(new BezierCurve(new Point(53, -46.5, Point.CARTESIAN), new Point(40, -46.5, Point.CARTESIAN), new Point(30, -46.5, Point.CARTESIAN), new Point(22, -46.5, Point.CARTESIAN), new Point(14.5, -46.5, Point.CARTESIAN)));
+        push3ish = new Path(new BezierCurve(new Point(49.4, -47.9, Point.CARTESIAN), new Point(46.3, -47.9, Point.CARTESIAN), new Point(20.4, -43.7, Point.CARTESIAN), new Point(5.4, -43.7, Point.CARTESIAN)));
         push3ish.setConstantHeadingInterpolation(Math.toRadians(180));
-        score2 = new Path(new BezierCurve(new Point(8.7, -47.7, Point.CARTESIAN), new Point(11.2, -40.2, Point.CARTESIAN), new Point(12.4, -32.1, Point.CARTESIAN),new Point(13.4, -16.6, Point.CARTESIAN), new Point(16.7, -7.4, Point.CARTESIAN)));
-        score2ish = new Path(new BezierCurve(new Point(16.7, -7.4, Point.CARTESIAN), new Point(19, 3.6, Point.CARTESIAN), new Point(20.9, 9.4, Point.CARTESIAN), new Point(22.5, 9.7, Point.CARTESIAN), new Point(28, 15, Point.CARTESIAN)));
+        score2 = new Path(new BezierLine(new Point(4.4, -43.7, Point.CARTESIAN), new Point(8.6, -26.2, Point.CARTESIAN)));
+        score2ish = new Path(new BezierCurve(new Point(13, -8.2, Point.CARTESIAN), new Point(19.8, 6.6, Point.CARTESIAN), new Point(29, 16.6, Point.CARTESIAN)));
         score2.setConstantHeadingInterpolation(Math.toRadians(0));
         score2ish.setConstantHeadingInterpolation(Math.toRadians(0));
-        comeback1 = new Path(new BezierCurve(new Point(24.3, 11.9, Point.CARTESIAN), new Point(23.6, 7.2, Point.CARTESIAN), new Point(20.3, -1.4, Point.CARTESIAN)));
-        comeback1ish = new Path(new BezierCurve(new Point(20.3, -1.4, Point.CARTESIAN), new Point(20.3, -6.9, Point.CARTESIAN), new Point(20.3, -11.9, Point.CARTESIAN), new Point(20.3 , -14.7, Point.CARTESIAN), new Point(11, -15.7 , Point.CARTESIAN)));
+        comeback1 = new Path(new BezierLine(new Point(30.7, 16.6, Point.CARTESIAN), new Point(22.1, 16.2, Point.CARTESIAN)));
+        comeback1ish = new Path(new BezierCurve(new Point(16.3, 9, Point.CARTESIAN), new Point(16, -3.7, Point.CARTESIAN), new Point(16.3 , -15.8, Point.CARTESIAN), new Point(5.1, -17.5, Point.CARTESIAN)));
         comeback1.setConstantHeadingInterpolation(Math.toRadians(180));
         comeback1ish.setConstantHeadingInterpolation(Math.toRadians(180));
-        score3 = new Path(new BezierLine(new Point(9.9, -19.2 , Point.CARTESIAN), new Point(10.5, -12.6, Point.CARTESIAN)));
-        score3ish = new Path(new BezierCurve(new Point(13.7, -2, Point.CARTESIAN), new Point(19.3, 9.5, Point.CARTESIAN), new Point(24.7, 10.7, Point.CARTESIAN), new Point(29.3, 17, Point.CARTESIAN)));
+        score3 = new Path(new BezierLine(new Point(5.1, -17.5, Point.CARTESIAN), new Point(10.5, -17.4, Point.CARTESIAN)));
+        score3ish = new Path(new BezierCurve(new Point(13.2, -8, Point.CARTESIAN), new Point(14.5, 10.1, Point.CARTESIAN), new Point(18.4, 16.9, Point.CARTESIAN), new Point(28, 18.2, Point.CARTESIAN)));
         score3.setConstantHeadingInterpolation(Math.toRadians(0));
         score3ish.setConstantHeadingInterpolation(Math.toRadians(0));
         score4 = new Path(new BezierLine(new Point(9.9, -19.2 , Point.CARTESIAN), new Point(10.5, -12.6, Point.CARTESIAN)));
@@ -280,26 +280,28 @@ public class Score5Auto extends OpMode {
                 count += 1;
             }else if(forward == 8) {
                 forward = 9;
-                if(count == 3){
+                /*if(count == 3){
                     follower.followPath(comeback2);
                 }else if(count == 4){
                     follower.followPath(comeback3);
                 }else {
                     follower.followPath(comeback1);
-                }
+                }*/
+                follower.followPath(comeback1);
                 slidestarget = 0;
                 gripspinny.setPower(1);
                 wristpose = .47;
             }
             else if(forward == 9) {
                 forward = 10;
-                if(count == 3){
+                /*if(count == 3){
                     follower.followPath(comeback2ish);
                 }else if(count == 4){
                     follower.followPath(comeback3ish);
                 }else {
                     follower.followPath(comeback1ish);
-                }
+                }*/
+                follower.followPath(comeback1ish);
                 armtarget = (int) armspecimenpickup;
                 wristpose = wristspecimenpickup;
                 slidestarget = 0;
@@ -307,7 +309,7 @@ public class Score5Auto extends OpMode {
                 gripspinny.setPower(-1);
             }else if(forward == 10) {
                 forward = 11;
-                if(count > 3){
+                if(count > 82){
                     follower.followPath(score4);
                 }else {
                     follower.followPath(score3);
@@ -317,9 +319,9 @@ public class Score5Auto extends OpMode {
             else if(forward == 11) {
                 forward = 8;
                 count += 1;
-                if(count == 4){
+                if(count == 82){
                     follower.followPath(score4ish);
-                }else if(count == 5){
+                }else if(count == 83){
                     follower.followPath(score5ish);
                 }else {
                     follower.followPath(score3ish);
