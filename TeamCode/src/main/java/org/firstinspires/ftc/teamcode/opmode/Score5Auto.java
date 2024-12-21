@@ -147,7 +147,7 @@ public class Score5Auto extends OpMode {
     /**
      * This initializes the Follower and creates the forward and backward Paths. Additionally, this
      * initializes the FTC Dashboard telemetry.
-     */ do you want to
+     */
     @Override
     public void init() {
         follower = new Follower(hardwareMap);

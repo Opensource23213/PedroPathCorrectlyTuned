@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmode;
 
+import static java.lang.Math.abs;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
@@ -18,7 +20,6 @@ import java.util.concurrent.TimeUnit;
 
 
 @Config
-@Disabled
 @TeleOp(name="ArmTest", group="ABC Opmode")
 //@Disabled
 public class ArmTest extends OpMode {
@@ -46,7 +47,6 @@ public class ArmTest extends OpMode {
     private AnalogInput ArmPos = null;
     private Servo wristy = null;
     private Servo twisty = null;
-    private CRServo gripspinny = null;
 
     double mode = 2;
     double slideratio = 2;
@@ -65,21 +65,27 @@ public class ArmTest extends OpMode {
     double armspecimenpickup = -1.8;
     double wristspecimenpickup = .63;
     double xpress = 1;
-
+    public flippy flip;
+    public spin gripspinny;
+    double wristpose = .5;
+    double twistpose = 0;
+    double flippose = 0;
+    public double slidestarget = 0;
     @Override
     public void init() {
         controller = new PIDController(p, i, d);
         armcontroller = new PIDController(armp, armi, armd);
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+        flip = new flippy();
+        gripspinny = new spin();
+        flip.initialize();
+        gripspinny.initialize();
         slides = hardwareMap.get(DcMotor.class, "slides"); //0 to -3.5 limit
         Arm1 = hardwareMap.get(DcMotor.class, "Arm1");
         Arm2 = hardwareMap.get(DcMotor.class, "Arm2");
         ArmPos = hardwareMap.get(AnalogInput.class, "ArmPos");
-        gripspinny = hardwareMap.get(CRServo.class, "gripspinny");
         wristy = hardwareMap.get(Servo.class, "wrist");
         twisty = hardwareMap.get(Servo.class, "twist");
-        wristy.setPosition(.5);
-        twisty.setPosition(.5);
         gripspinny.setPower(0);
         slides.setDirection(DcMotor.Direction.REVERSE);
         slides.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -87,124 +93,143 @@ public class ArmTest extends OpMode {
         Arm1 .setDirection(DcMotor.Direction.REVERSE);
         Arm1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         Arm2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        gripspinny.setDirection(DcMotorSimple.Direction.REVERSE);
-
-
+        flippose = .55;
+        wristpose = .5;
+        twistpose = 0;
     }
-    double wristpose = .5;
-    double twistpose = .5;
+
     @Override
     public void loop() {
-        if(gamepad1.a && gamepad1.left_trigger > .4){
-            mode = 1;
-        }
-        if (gamepad1.b && gamepad1.left_trigger > .4){
-            mode = 2;
-        }
-        if(gamepad1.y){
-            armtarget = (int) 640;
-            target = (int) (3.7295 * slideticks * 2);
-            mode = 1;
-        }
-        if(gamepad1.b){
-            wristy.setPosition(.094);
-            wristpose = .094;
-            xpress = 1.5;
-        }
-        if(gamepad1.x){
-            wristy.setPosition(.4);
-            wristpose = .4;
-            armtarget = (int) (44 * armticks);
-            mode = 1;
-            xpress = 1.5;
-        }
-        if(xpress == 1.5){
-            runtime = new ElapsedTime();
-            xpress = 2;
-        }else if(xpress == 2 && runtime.time(TimeUnit.MILLISECONDS) > 250){
+        arm();
+        if(gamepad2.a){
             gripspinny.setPower(1);
-            xpress = 3;
-        }else if(xpress == 3 && runtime.time(TimeUnit.MILLISECONDS) > 750){
-            gripspinny.setPower(0);
-            xpress = 1;
-        }
-        if(gamepad2.y){
+        }else if(gamepad2.b){
             gripspinny.setPower(-1);
-        } else if (gamepad2.x) {
-            gripspinny.setPower(1);
-        }else if(xpress != 2){
+        }  else{
             gripspinny.setPower(0);
         }
-        if(mode == 1) {
-            controller.setPID(p, i, d);
-            double slidesPose = -slides.getCurrentPosition() * 2;
-            armd = slidesPose/slideticks * .03 / 19.6;
-            armf = .001 + slidesPose/slideticks * .2 / 19.6;
-            double pid = controller.calculate(slidesPose, target);
-            double ff = Math.cos(Math.toRadians(target)) * f;
+        if(gamepad1.a){
+            //pick
+            flippose = .058;
+            wristpose = .535;
+            twistpose = .552;
+        }
+        else if(gamepad1.b){
+            //0
+            flippose = .55;
+            wristpose = .5;
+            twistpose = 0;
+        }
+        if (wristpose <= 1 && gamepad2.dpad_up){
+            wristpose += .001;
+        }
+        if (twistpose <= 1 && gamepad2.dpad_right){
+            twistpose += .001;
+        }
+        if (wristpose >= 0 && gamepad2.dpad_down){
+            wristpose -= .001;
+        }
+        if (twistpose >= 0 && gamepad2.dpad_left){
+            twistpose -= .001;
+        }
+        if (flippose >= 0 && gamepad1.dpad_down){
+            flippose -= .001;
+        }
+        if (flippose <= 1 && gamepad1.dpad_up){
+            flippose += .001;
+        }
+    }
 
-            double power = pid + ff;
-
+    public void arm(){
+        toplimit = 1406 + (2 * slideticks * 2);
+        controller.setPID(p, i, d);
+        double newpos = -312;
+        double slidesPose = -slides.getCurrentPosition() * 2;
+        armd = -slides.getCurrentPosition() / slideticks * .03 / 19.6;
+        armf = .001 + -slides.getCurrentPosition() / slideticks * .2 / 19.6;
+        double pid = controller.calculate(slidesPose, slidestarget);
+        double ff = Math.cos(Math.toRadians(slidestarget)) * f;
+        double power = pid + ff;
+        if (-250 < slidesPose - slidestarget && slidesPose - slidestarget < 250 && (gamepad2.right_stick_y > .1 || gamepad2.right_stick_y < -.1)) {
+            double otherPose = -slides.getCurrentPosition() / slideticks;
+            if (otherPose < bottomlimit && gamepad2.right_stick_y > 0) {
+                slides.setPower(0);
+                slidestarget = (int) (-slides.getCurrentPosition() * 2);
+            } else if (slidesPose > toplimit && gamepad2.right_stick_y < 0) {
+                slides.setPower(0);
+                slidestarget = (int) (-slides.getCurrentPosition() * 2);
+            } else {
+                slides.setPower(gamepad2.right_stick_y * .75);
+                slidestarget = (int) (-slides.getCurrentPosition() * 2);
+            }
+        } else {
             slides.setPower(-power);
-
-            /*telemetry.addData("pose", slidesPose);
-            telemetry.addData("target", target);
-            telemetry.addData("power", power);
-            telemetry.update();*/
-            armcontroller.setPID(armp, armi, armd);
-            double ticks = .002866;
-            double conversion = ticks * armticks;
-            double armPose = (1 - ArmPos.getVoltage() - .2) / ticks * armticks;
-            double armpid = controller.calculate(armPose, armtarget);
-            double armff = Math.cos(Math.toRadians(armtarget)) * armf;
-
-            double armpower = armpid + armff;
-
+        }
+        armcontroller.setPID(armp, armi, armd);
+        double ticks = .002866;
+        double armPose = (1 - ArmPos.getVoltage() - .2) / ticks * armticks;
+        double armpid = controller.calculate(armPose, armtarget);
+        double armff = Math.cos(Math.toRadians(armtarget)) * armf;
+        double armpower = armpid + armff;
+         if (abs(abs(armPose) - abs(armtarget)) < 150 && (gamepad2.left_stick_y > .1 || gamepad2.left_stick_y < -.1)) {
+            if (armPose < newpos + 45 && gamepad2.left_stick_y > 0) {
+                Arm1.setPower(0);
+                Arm2.setPower(0);
+                armtarget = (int) (armPose);
+            }else {
+                Arm1.setPower(gamepad2.left_stick_y / 2);
+                Arm2.setPower(gamepad2.left_stick_y / 2);
+                armtarget = (int) (armPose);
+            }
+        } else {
             Arm1.setPower(-armpower);
             Arm2.setPower(-armpower);
-            if(-armpower < .18 && -armpower > -.18 && -power < .18 && -power > -.18){
-                mode = 2;
-            }
-
-            telemetry.addData("pose", slidesPose);
-            telemetry.addData("target", target);
-            telemetry.addData("power", power);
-            telemetry.update();
-        }else{
-            double slidesPose = -slides.getCurrentPosition() / slideticks;
-            double ticks = .002866;
-            double conversion = ticks * armticks;
-            double ArmPose = (1 - ArmPos.getVoltage() - .2) / ticks * armticks;
-            if (slidesPose < bottomlimit && gamepad1.left_stick_y > 0){
-                slides.setPower(0);
-            }else if(slidesPose > toplimit && gamepad1.left_stick_y < 0){
-                slides.setPower(0);
-            }else{
-                slides.setPower(gamepad1.left_stick_y);
-            }
-
-            Arm1.setPower(gamepad1.right_stick_y/2);
-            Arm2.setPower(gamepad1.right_stick_y/2);
-            if (wristpose >= 0 && gamepad2.left_stick_y > 0){
-                wristpose -= gamepad2.left_stick_y * .01;
-            }
-            if (twistpose >= 0 && gamepad2.right_stick_x > 0){
-                twistpose -= gamepad2.right_stick_x * .01;
-            }
-            if (wristpose <= 1 && gamepad2.left_stick_y < 0){
-                wristpose -= gamepad2.left_stick_y * .01;
-            }
-            if (twistpose <= 1 && gamepad2.right_stick_x < 0){
-                twistpose -= gamepad2.right_stick_x * .01;
-            }
-            twisty.setPosition(twistpose);
-            wristy.setPosition(wristpose);
-            telemetry.addData("slidepose", slidesPose);
-            telemetry.addData("armpose", ArmPose);
-            telemetry.addData("wristpose", wristy.getPosition());
-            telemetry.addData("twistpose", twisty.getPosition());
-            telemetry.update();
         }
+        telemetry.addData("pose", armPose);
+        telemetry.addData("target", armtarget);
+        telemetry.addData("power", -armpower);
+        telemetry.addData("now - target", slidesPose - slidestarget);
+        telemetry.addData("pose", slidesPose);
+        telemetry.addData("target", slidestarget);
+        telemetry.addData("power", -power);
+        telemetry.addData("Flippy position", flip.getPosition());
+        telemetry.addData("Wrist position", wristy.getPosition());
+        telemetry.addData("Twist position", twisty.getPosition());
+        telemetry.update();
+        wristy.setPosition(wristpose);
+        twisty.setPosition(twistpose);
+        flip.setPosition(flippose);
+    }
+    public class spin{
+        public CRServo spinny1;
+        public CRServo spinny2;
+        public void initialize(){
+            spinny1 = hardwareMap.get(CRServo.class, "spinny1");
+            spinny2 = hardwareMap.get(CRServo.class, "spinny2");
+            spinny1.setDirection(DcMotorSimple.Direction.REVERSE);
+        }
+        public void setPower(double power){
+            spinny1.setPower(power);
+            spinny2.setPower(power);
+        }
+        public double getPower(){
+            return spinny1.getPower();
+        }
+    }
+
+
+    public class flippy{
+        public Servo flippy1;
+        public Servo flippy2;
+        public void initialize(){
+            flippy1 = hardwareMap.get(Servo.class, "flippy1");
+            flippy2 = hardwareMap.get(Servo.class, "flippy2");
+        }
+        public void setPosition(double pos){
+            flippy1.setPosition(pos);
+            flippy2.setPosition(pos);
+        }
+        public double getPosition(){ return flippy1.getPosition(); }
     }
 }
 

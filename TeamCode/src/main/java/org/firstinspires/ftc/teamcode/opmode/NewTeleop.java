@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 
 @Config
-@TeleOp(name="Codethatworks", group="ABC Opmode")
+@TeleOp(name="OldTele", group="ABC Opmode")
 //@Disabled
 public class NewTeleop extends OpMode {
     private PIDController controller;
