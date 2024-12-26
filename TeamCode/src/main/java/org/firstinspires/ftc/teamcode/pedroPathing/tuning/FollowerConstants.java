@@ -30,16 +30,16 @@ public class FollowerConstants {
 
     // This section is for setting the actual drive vector for the front left wheel, if the robot
     // is facing a heading of 0 radians with the wheel centered at (0,0)
-    private static double xMovement = 84.5339;
-    private static double yMovement = 56.4762;
+    private static double xMovement = 77.23246368648499;
+    private static double yMovement = 55.22356408787525;
     private static double[] convertToPolar = Point.cartesianToPolar(xMovement, -yMovement);
     public static Vector frontLeftVector = MathFunctions.normalizeVector(new Vector(convertToPolar[0], convertToPolar[1]));
 
 
     // Translational PIDF coefficients (don't use integral)
     public static CustomPIDFCoefficients translationalPIDFCoefficients = new CustomPIDFCoefficients(
-            0.27,
-            0.0000005,
+            0.2,
+            0,
             0.0015,
             0.0005);
 
@@ -51,12 +51,12 @@ public class FollowerConstants {
             0);
 
     // Feed forward constant added on to the translational PIDF
-    public static double translationalPIDFFeedForward = 0.015;
+    public static double translationalPIDFFeedForward = 0.0015;
 
 
     // Heading error PIDF coefficients
     public static CustomPIDFCoefficients headingPIDFCoefficients = new CustomPIDFCoefficients(
-            1,
+            2,
             0,
             0,
             0);
@@ -67,7 +67,7 @@ public class FollowerConstants {
 
     // Drive PIDF coefficients
     public static CustomFilteredPIDFCoefficients drivePIDFCoefficients = new CustomFilteredPIDFCoefficients(
-            0.02,
+            0.03,
             0,
             0.0001,
             0.6,
@@ -86,16 +86,16 @@ public class FollowerConstants {
     public static double mass = 14.152;
 
     // Centripetal force to power scaling
-    public static double centripetalScaling = 0.0005;
+    public static double centripetalScaling = 0.0002;
 
 
     // Acceleration of the drivetrain when power is cut in inches/second^2 (should be negative)
     // if not negative, then the robot thinks that its going to go faster under 0 power
-    public static double forwardZeroPowerAcceleration = -37.4323;
+    public static double forwardZeroPowerAcceleration = -32.498041887351945;
 
     // Acceleration of the drivetrain when power is cut in inches/second^2 (should be negative)
     // if not negative, then the robot thinks that its going to go faster under 0 power
-    public static double lateralZeroPowerAcceleration = -87.4342;
+    public static double lateralZeroPowerAcceleration = -78.97854065515523;
 
     // A multiplier for the zero power acceleration to change the speed the robot decelerates at
     // the end of paths.
@@ -200,10 +200,10 @@ public class FollowerConstants {
 
     // Secondary drive PIDF coefficients
     public static CustomFilteredPIDFCoefficients secondaryDrivePIDFCoefficients = new CustomFilteredPIDFCoefficients(
-            0.02,
             0,
-            0.000005,
-            0.6,
+            0,
+            0,
+            0,
             0);
 
     // Feed forward constant added on to the secondary drive PIDF

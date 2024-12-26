@@ -47,6 +47,8 @@ public class ArmTest extends OpMode {
     private AnalogInput ArmPos = null;
     private Servo wristy = null;
     private Servo twisty = null;
+    public AnalogInput wristencoder;
+    public double wrist_at;
 
     double mode = 2;
     double slideratio = 2;
@@ -86,6 +88,7 @@ public class ArmTest extends OpMode {
         ArmPos = hardwareMap.get(AnalogInput.class, "ArmPos");
         wristy = hardwareMap.get(Servo.class, "wrist");
         twisty = hardwareMap.get(Servo.class, "twist");
+        wristencoder = hardwareMap.get(AnalogInput.class, "wristencoder");
         gripspinny.setPower(0);
         slides.setDirection(DcMotor.Direction.REVERSE);
         slides.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -141,6 +144,7 @@ public class ArmTest extends OpMode {
     }
 
     public void arm(){
+        wrist_at = abs(1 - wristencoder.getVoltage() / 3.3);
         toplimit = 1406 + (2 * slideticks * 2);
         controller.setPID(p, i, d);
         double newpos = -312;
@@ -193,7 +197,7 @@ public class ArmTest extends OpMode {
         telemetry.addData("target", slidestarget);
         telemetry.addData("power", -power);
         telemetry.addData("Flippy position", flip.getPosition());
-        telemetry.addData("Wrist position", wristy.getPosition());
+        telemetry.addData("Wrist position", wrist_at);
         telemetry.addData("Twist position", twisty.getPosition());
         telemetry.update();
         wristy.setPosition(wristpose);
@@ -221,15 +225,19 @@ public class ArmTest extends OpMode {
     public class flippy{
         public Servo flippy1;
         public Servo flippy2;
+        AnalogInput flipencoder;
         public void initialize(){
             flippy1 = hardwareMap.get(Servo.class, "flippy1");
             flippy2 = hardwareMap.get(Servo.class, "flippy2");
+            flipencoder = hardwareMap.get(AnalogInput.class, "flipencoder");
         }
         public void setPosition(double pos){
             flippy1.setPosition(pos);
             flippy2.setPosition(pos);
         }
-        public double getPosition(){ return flippy1.getPosition(); }
+        public double getPosition(){
+            return abs(1 - flipencoder.getVoltage() / 3.3);
+        }
     }
 }
 

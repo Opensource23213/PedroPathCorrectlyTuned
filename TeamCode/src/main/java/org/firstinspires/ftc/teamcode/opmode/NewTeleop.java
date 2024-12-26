@@ -8,6 +8,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.hardware.rev.RevTouchSensor;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
@@ -29,8 +30,9 @@ import java.util.concurrent.TimeUnit;
 
 
 @Config
+@Disabled
 @TeleOp(name="OldTele", group="ABC Opmode")
-//@Disabled
+
 public class NewTeleop extends OpMode {
     private PIDController controller;
     private PIDController armcontroller;

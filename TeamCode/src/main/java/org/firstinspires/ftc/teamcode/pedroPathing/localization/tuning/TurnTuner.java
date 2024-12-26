@@ -5,6 +5,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
@@ -27,6 +28,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.Drawing;
  * @version 1.0, 5/6/2024
  */
 @Config
+@Disabled
 @Autonomous(name = "Turn Localizer Tuner", group = "Autonomous Pathing Tuning")
 public class TurnTuner extends OpMode {
     private PoseUpdater poseUpdater;
@@ -34,7 +36,7 @@ public class TurnTuner extends OpMode {
 
     private Telemetry telemetryA;
 
-    public static double ANGLE = 8 * Math.PI;
+    public static double ANGLE = 1 * Math.PI;
     public DcMotor front_left = null;
     public DcMotor rear_left = null;
     public DcMotor front_right = null;

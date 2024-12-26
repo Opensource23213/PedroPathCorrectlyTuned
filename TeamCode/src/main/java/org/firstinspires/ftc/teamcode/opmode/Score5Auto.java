@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmode;
 
+import static java.lang.Math.abs;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
@@ -18,12 +20,14 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
+import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierCurve;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierLine;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Path;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathChain;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
 
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -46,7 +50,7 @@ public class Score5Auto extends OpMode {
 
     public static double DISTANCE = 40;
 
-    private double forward = 0 ;
+    private double forward = 1;
 
     private Follower follower;
 
@@ -142,7 +146,14 @@ public class Score5Auto extends OpMode {
     double slidesPose = 0;
     double wristpose = .5;
     double twistpose = .5;
-    public double count = 0;
+    public double count = 1;
+    public double flippose = 0;
+    public flippy flip;
+    public double flipsafe = 1;
+    public double dropping = 1;
+    public double special_pick = 1;
+    public double first_score = 1;
+
 
     /**
      * This initializes the Follower and creates the forward and backward Paths. Additionally, this
@@ -151,58 +162,39 @@ public class Score5Auto extends OpMode {
     @Override
     public void init() {
         follower = new Follower(hardwareMap);
-
+        flip = new flippy();
         forwards = new Path(new BezierLine(new Point(0,0, Point.CARTESIAN), new Point(DISTANCE,0, Point.CARTESIAN)));
         forwards.setConstantHeadingInterpolation(0);
         backwards = new Path(new BezierLine(new Point(DISTANCE,0, Point.CARTESIAN), new Point(0,0, Point.CARTESIAN)));
         backwards.setConstantHeadingInterpolation(0);
-        score1 = new Path(new BezierCurve(new Point(3.4, 3.7, Point.CARTESIAN), new Point(10.8, 7.3, Point.CARTESIAN), new Point(20.8, 12.1, Point.CARTESIAN), new Point(28, 12.9, Point.CARTESIAN)));
+        score1 = new Path(new BezierLine(new Point(0, 0, Point.CARTESIAN), new Point(26, 13, Point.CARTESIAN)));
         score1.setConstantHeadingInterpolation(0);
-        push1 = new Path(new BezierCurve(new Point(31, 12.9, Point.CARTESIAN), new Point(25.3, 10, Point.CARTESIAN), new Point(22.8, 1.8, Point.CARTESIAN), new Point(23.2, -12.7, Point.CARTESIAN)));
+        push1 = new Path(new BezierCurve(new Point(15, -12.1, Point.CARTESIAN),new Point(19, -15.1, Point.CARTESIAN), new Point(22.8, -20.6, Point.CARTESIAN), new Point(48.2, -21.4, Point.CARTESIAN),new Point(48.8, -30, Point.CARTESIAN)));
+        push1ish = new Path(new BezierCurve(new Point(48.8, -30, Point.CARTESIAN), new Point(45, -30, Point.CARTESIAN), new Point(38.2, -30, Point.CARTESIAN), new Point(14.9, -30, Point.CARTESIAN)));
         push1.setConstantHeadingInterpolation(0);
-        push1ish = new Path(new BezierCurve(new Point(23.2, -12.7, Point.CARTESIAN), new Point(27.3, -19.5, Point.CARTESIAN), new Point(30.9, -22.6, Point.CARTESIAN), new Point(47.1, -24.2, Point.CARTESIAN)));
         push1ish.setConstantHeadingInterpolation(0);
-        push1ish2 = new Path(new BezierCurve(new Point(47.1, -24.2, Point.CARTESIAN), new Point(49.6, -31.3, Point.CARTESIAN), new Point(37.8, -31.3, Point.CARTESIAN), new Point(13, -31, Point.CARTESIAN)));
-        push1ish2.setConstantHeadingInterpolation(0);
-        push2 = new Path(new BezierCurve(new Point(13, -31, Point.CARTESIAN), new Point(20, -31, Point.CARTESIAN), new Point(30, -31, Point.CARTESIAN), new Point(43.9, -32.7, Point.CARTESIAN), new Point(48.3, -34.6, Point.CARTESIAN), new Point(48.5, -39.3, Point.CARTESIAN)));
-        push2ish = new Path(new BezierCurve(new Point(48.5, -39.3, Point.CARTESIAN), new Point(34, -40.2, Point.CARTESIAN), new Point(12.8, -38.9, Point.CARTESIAN)));
+        push2 = new Path(new BezierCurve(new Point(14.9, -30, Point.CARTESIAN),new Point(27.2, -30, Point.CARTESIAN), new Point(39.5, -30, Point.CARTESIAN), new Point(44.7, -32, Point.CARTESIAN),new Point(47.5, -39.6, Point.CARTESIAN)));
+        push2ish = new Path(new BezierCurve(new Point(47.5, -39.6, Point.CARTESIAN), new Point(44.7, -39.6, Point.CARTESIAN), new Point(30.5, -39.7, Point.CARTESIAN), new Point(14.8, -40, Point.CARTESIAN)));
         push2.setConstantHeadingInterpolation(0);
         push2ish.setConstantHeadingInterpolation(0);
-        push3 = new Path(new BezierCurve(new Point(23.6, -37.5, Point.CARTESIAN), new Point(45.7, -38, Point.CARTESIAN), new Point(47.4, -42.2, Point.CARTESIAN)));
-        push3.setLinearHeadingInterpolation(0,Math.toRadians(180));
-        push3ish = new Path(new BezierCurve(new Point(49.4, -47.9, Point.CARTESIAN), new Point(46.3, -47.9, Point.CARTESIAN), new Point(20.4, -43.7, Point.CARTESIAN), new Point(5.4, -43.7, Point.CARTESIAN)));
-        push3ish.setConstantHeadingInterpolation(Math.toRadians(180));
-        score2 = new Path(new BezierLine(new Point(4.4, -43.7, Point.CARTESIAN), new Point(8.6, -26.2, Point.CARTESIAN)));
-        score2ish = new Path(new BezierCurve(new Point(13, -8.2, Point.CARTESIAN), new Point(19.8, 6.6, Point.CARTESIAN), new Point(29, 16.6, Point.CARTESIAN)));
-        score2.setConstantHeadingInterpolation(Math.toRadians(0));
-        score2ish.setConstantHeadingInterpolation(Math.toRadians(0));
-        comeback1 = new Path(new BezierLine(new Point(30.7, 16.6, Point.CARTESIAN), new Point(22.1, 16.2, Point.CARTESIAN)));
-        comeback1ish = new Path(new BezierCurve(new Point(16.3, 9, Point.CARTESIAN), new Point(16, -3.7, Point.CARTESIAN), new Point(16.3 , -15.8, Point.CARTESIAN), new Point(5.1, -17.5, Point.CARTESIAN)));
-        comeback1.setConstantHeadingInterpolation(Math.toRadians(180));
-        comeback1ish.setConstantHeadingInterpolation(Math.toRadians(180));
-        score3 = new Path(new BezierLine(new Point(5.1, -17.5, Point.CARTESIAN), new Point(10.5, -17.4, Point.CARTESIAN)));
-        score3ish = new Path(new BezierCurve(new Point(13.2, -8, Point.CARTESIAN), new Point(14.5, 10.1, Point.CARTESIAN), new Point(18.4, 16.9, Point.CARTESIAN), new Point(28, 18.2, Point.CARTESIAN)));
-        score3.setConstantHeadingInterpolation(Math.toRadians(0));
-        score3ish.setConstantHeadingInterpolation(Math.toRadians(0));
-        score4 = new Path(new BezierLine(new Point(9.9, -19.2 , Point.CARTESIAN), new Point(10.5, -12.6, Point.CARTESIAN)));
-        score4ish = new Path(new BezierCurve(new Point(13.7, -2, Point.CARTESIAN), new Point(19.3, 9.5, Point.CARTESIAN), new Point(24.7, 10.7, Point.CARTESIAN), new Point(27.5, 17, Point.CARTESIAN)));
-        score4.setConstantHeadingInterpolation(Math.toRadians(5));
-        score4ish.setConstantHeadingInterpolation(Math.toRadians(5));
-        score5 = new Path(new BezierLine(new Point(9.9, -19.2 , Point.CARTESIAN), new Point(10.5, -12.6, Point.CARTESIAN)));
-        score5ish = new Path(new BezierCurve(new Point(13.7, -2, Point.CARTESIAN), new Point(19.3, 9.5, Point.CARTESIAN), new Point(24.7, 10.7, Point.CARTESIAN), new Point(27.5, 17, Point.CARTESIAN)));
-        score5.setConstantHeadingInterpolation(Math.toRadians(0));
-        score5ish.setConstantHeadingInterpolation(Math.toRadians(0));
-        comeback2 = new Path(new BezierCurve(new Point(22, 17, Point.CARTESIAN), new Point(21, 7.2, Point.CARTESIAN), new Point(20, -1.4, Point.CARTESIAN)));
-        comeback2ish = new Path(new BezierCurve(new Point(20, -1.4, Point.CARTESIAN), new Point(20, -6.9, Point.CARTESIAN),new Point(20, -11.9, Point.CARTESIAN), new Point(20, -14, Point.CARTESIAN), new Point(13, -16, Point.CARTESIAN)));
-        comeback2.setConstantHeadingInterpolation(Math.toRadians(190));
-        comeback2ish.setConstantHeadingInterpolation(Math.toRadians(190));
-        comeback3 = new Path(new BezierCurve(new Point(22, 17, Point.CARTESIAN), new Point(21, 7.2, Point.CARTESIAN), new Point(20, -1.4, Point.CARTESIAN)));
-        comeback3ish = new Path(new BezierCurve(new Point(20, -1.4, Point.CARTESIAN), new Point(20, -6.9, Point.CARTESIAN),new Point(20, -11.9, Point.CARTESIAN), new Point(20, -15, Point.CARTESIAN), new Point(13, -17, Point.CARTESIAN)));
-        comeback3.setConstantHeadingInterpolation(Math.toRadians(195));
-        comeback3ish.setConstantHeadingInterpolation(Math.toRadians(195));
-        MainCode = new PathChain(score1, push1, push1ish, push2, push2ish, push3, push3ish, score2, comeback1, comeback1ish, score3, score3ish, score3, score3ish);
+        push3 = new Path(new BezierCurve(new Point(14.8, -40, Point.CARTESIAN), new Point(27.3, -39.9, Point.CARTESIAN), new Point(42, -40.7, Point.CARTESIAN), new Point(48, -41.3, Point.CARTESIAN),new Point(50.6, -46.8, Point.CARTESIAN)));
+        push3ish = new Path(new BezierCurve(new Point(50.6, -46.8, Point.CARTESIAN), new Point(39.2, -46.8, Point.CARTESIAN), new Point(16.7, -46.8, Point.CARTESIAN), new Point(4.2, -46.8, Point.CARTESIAN)));
+        push3.setConstantHeadingInterpolation(0);
+        push3ish.setConstantHeadingInterpolation(0);
+        score2 = new Path(new BezierCurve(new Point(4.7, -34, Point.CARTESIAN), new Point(9, -16.2, Point.CARTESIAN), new Point(13.3, -1.4, Point.CARTESIAN), new Point(20.6, 12.1, Point.CARTESIAN), new Point(29, 11.4, Point.CARTESIAN)));
+        score2.setConstantHeadingInterpolation(0);
+        score2ish = new Path(new BezierLine(new Point(29, 11.4, Point.CARTESIAN), new Point(31, 17.2, Point.CARTESIAN)));
+        score2ish.setConstantHeadingInterpolation(0);
+        comeback1 = new Path(new BezierCurve(new Point(26.8, 19, Point.CARTESIAN), new Point(20.2, 2.8, Point.CARTESIAN), new Point(16.9, -12.3, Point.CARTESIAN), new Point(10, -16.8, Point.CARTESIAN)));
+        comeback1.setConstantHeadingInterpolation(0);
+        comeback1ish = new Path(new BezierLine(new Point(10, -16.8, Point.CARTESIAN), new Point(4.1, -16.9, Point.CARTESIAN)));
+        comeback1ish.setConstantHeadingInterpolation(0);
+        score3 = new Path(new BezierCurve(new Point(9.1, -18.9, Point.CARTESIAN), new Point(15.1, .7, Point.CARTESIAN), new Point(17.3, 11.4, Point.CARTESIAN), new Point(27, 11.1, Point.CARTESIAN)));
+        score3.setConstantHeadingInterpolation(0);
+        score3ish = new Path(new BezierLine(new Point(27, 11.1, Point.CARTESIAN), new Point(32.4, 15.4, Point.CARTESIAN)));
+        score3ish.setConstantHeadingInterpolation(0);
         follower.followPath(score1);
-
+        flip.initialize();
         telemetryA = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
         telemetryA.addLine("This will run the robot in a straight line going " + DISTANCE
                             + " inches forward. The robot will go forward and backward continuously"
@@ -221,125 +213,125 @@ public class Score5Auto extends OpMode {
      */
     @Override
     public void loop() {
-        a = 1;
+        if(a == 0){
+            a = 1;
+        }
+        if(first_score == 1){
+            if(limitfront.isPressed() || limitfront2.isPressed()){
+                gripspinny.setPower(1);
+                wristpose = .5;
+                slidestarget = 0;
+                dropping = 2;
+                first_score = 2;
+            }
+        }
         arm();
-        if(forward == 0){
-            armtarget = (int) (640);
-            slidestarget = (int) (5 * slideticks * 2);
-            wristpose = .75;
-            twistpose = .5;
-            forward = 1;
-            count += 1;
-        }
+        safeflip();
+        release();
         follower.update();
-        if (follower.atParametricEnd()) {
-            if (forward == 1) {
-                forward = 2;
-                follower.followPath(push1);
-                slidestarget = 0;
-                gripspinny.setPower(1);
-                wristpose = .47;
-            } else if(forward == 2){
-                forward = 2.5;
-                follower.followPath(push1ish);
-                armtarget = 0;
-                wristpose = 0;
-                twistpose = .5;
-            }else if(forward == 2.5){
-                forward = 3;
-                follower.followPath(push1ish2);
-            }else if(forward == 3){
-                forward = 4;
-                follower.followPath(push2);
-            }else if(forward == 4) {
-                forward = 5;
-                follower.followPath(push2ish);
-            }else if(forward == 5){
-                forward = 6;
-                follower.followPath(push3);
-            }else if(forward == 6) {
-                forward = 7;
-                follower.followPath(push3ish);
-                armtarget = (int) armspecimenpickup;
-                wristpose = wristspecimenpickup;
-                twistpose = .5;
-                gripspinny.setPower(-1);
-            }
-            else if(forward == 7) {
-                forward = 7.5;
-                follower.followPath(score2);
-                wristpose = .8;
-            }else if(forward == 7.5) {
-                forward = 8;
-                follower.followPath(score2ish);
-                armtarget = (int) (640);
-                slidestarget = (int) (5 * slideticks * 2);
-                wristpose = .75 ;
-                twistpose = .5;
-                gripspinny.setPower(0);
-                count += 1;
-            }else if(forward == 8) {
-                forward = 9;
-                /*if(count == 3){
-                    follower.followPath(comeback2);
-                }else if(count == 4){
-                    follower.followPath(comeback3);
-                }else {
+        if(follower.atParametricEnd()) {
+            if(count <= 1) {
+                if (forward == 1) {
+                    //finish first score and start the movements to push the first block
+                    drivetime = new ElapsedTime();
+                    follower.followPath(push1);
+                    forward = 1.5;
+                } else if (forward == 1.5) {
+                    //finish pushing the first block
+                    follower.followPath(push1ish);
+                    wristpose = .5;
+                    slidestarget = 0;
+                    dropping = 2;
+                    gripspinny.setPower(0);
+                    forward = 2;
+                } else if (forward == 2) {
+                    //start pushing block 2
+                    follower.followPath(push2);
+                    forward = 2.5;
+                } else if (forward == 2.5) {
+                    //finish pushing block 2
+                    follower.followPath(push2ish);
+                    forward = 3;
+                } else if (forward == 3) {
+                    //start push block 3
+                    follower.followPath(push3);
+                    gripspinny.setPower(-1);
+                    forward = 3.5;
+                } else if (forward == 3.5) {
+                    //finish pushing block 3 and pick block from wall
+                    follower.followPath(push3ish);
+                    forward = 4;
+                } else if (forward == 4) {
+                    //go to score the second time
+                    armtarget = 732;
+                    slidestarget = 540;
+                    wristpose = .69;
+                    twistpose = 0;
+                    flippose = .635;
+                    follower.followPath(score2);
+                    forward = 4.5;
+                } else if (forward == 4.5) {
+                    //scoot over after scoring
+                    follower.followPath(score2ish);
+                    count += 1;
+                    forward = 5;
+                }
+            } else {
+                //loop for scoring all other blocks
+                if (forward == 5) {
+                    //comeback to human player to pick up a block
+                    gripspinny.setPower(1);
+                    wristpose = .5;
+                    slidestarget = 0;
+                    if(count == 5){
+                        //used for the last pick to pick the yellow from the wall
+                        special_pick = 2;
+                    }
+                    dropping = 2;
                     follower.followPath(comeback1);
-                }*/
-                follower.followPath(comeback1);
-                slidestarget = 0;
-                gripspinny.setPower(1);
-                wristpose = .47;
-            }
-            else if(forward == 9) {
-                forward = 10;
-                /*if(count == 3){
-                    follower.followPath(comeback2ish);
-                }else if(count == 4){
-                    follower.followPath(comeback3ish);
-                }else {
+                    forward = 5.5;
+                } else if (forward == 5.5) {
+                    gripspinny.setPower(-1);
+                    //pick block from human player
                     follower.followPath(comeback1ish);
-                }*/
-                follower.followPath(comeback1ish);
-                armtarget = (int) armspecimenpickup;
-                wristpose = wristspecimenpickup;
-                slidestarget = 0;
-                twistpose = .5;
-                gripspinny.setPower(-1);
-            }else if(forward == 10) {
-                forward = 11;
-                if(count > 82){
-                    follower.followPath(score4);
-                }else {
+                    forward = 6;
+                    if(count == 5){
+                        //park for now, score in bucket in the future
+                        forward = 10;
+                    }
+                } else if (forward == 6) {
+                    //go to score the block
+                    armtarget = 732;
+                    slidestarget = 540;
+                    wristpose = .69;
+                    twistpose = 0;
+                    flippose = .635;
                     follower.followPath(score3);
-                }
-                wristpose = .8;
-            }
-            else if(forward == 11) {
-                forward = 8;
-                count += 1;
-                if(count == 82){
-                    follower.followPath(score4ish);
-                }else if(count == 83){
-                    follower.followPath(score5ish);
-                }else {
-                    follower.followPath(score3ish);
-                }
-                armtarget = (int) (660);
-                slidestarget = (int) (5.3 * slideticks * 2);
-                wristpose = .75 ;
-                twistpose = .5;
-                gripspinny.setPower(0);
-                if(count >= 5){
-                    forward = 12;
-                }
-            }
-            else{
+                    forward = 6.5;
+                } else if (forward == 6.5) {
+                    //scoot over after scoring
+                    count += 1;
+                    if(count < 5) {
+                        follower.followPath(score3ish);
+                        forward = 5;
+                    }else{
+                        forward = 5;
+                    }
 
+
+                }
+                else if(forward == 10){
+                    //hold final pose for now
+                    armtarget = 732;
+                    slidestarget = 0;
+                    wristpose = .69;
+                    twistpose = 0;
+                    flippose = .635;
+                    gripspinny.setPower(-1);
+                    follower.holdPoint(follower.getPose());
+                }
             }
         }
-
         telemetryA.addData("going forward", forward);
         follower.telemetryDebug(telemetryA);
     }
@@ -355,7 +347,6 @@ public class Score5Auto extends OpMode {
         gripspinny.initialize();
         wristy = hardwareMap.get(Servo.class, "wrist");
         twisty = hardwareMap.get(Servo.class, "twist");
-        imu = hardwareMap.get(IMU.class, "imu");
         front_left = hardwareMap.get(DcMotor.class, "front_left");
         front_right = hardwareMap.get(DcMotor.class, "front_right");
         rear_left = hardwareMap.get(DcMotor.class, "rear_left");
@@ -378,8 +369,11 @@ public class Score5Auto extends OpMode {
         front_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rear_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rear_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        armtarget = (int) (14.5 * armticks);
+        armtarget = 0;
         slidestarget = 0;
+        wristpose = .8;
+        flippose = .235;
+        twistpose = 0;
     }
     public void arm(){
         toplimit = 1406;
@@ -418,11 +412,35 @@ public class Score5Auto extends OpMode {
             Arm1.setPower(-armpower);
             Arm2.setPower(-armpower);
         }
-        if(a == 1) {
-            wristy.setPosition(wristpose);
-            twisty.setPosition(twistpose);
+        if(a == 1){
+            a = 2;
+            armtarget = 732;
+            slidestarget = 540;
+            wristpose = .69;
+            twistpose = 0;
+            flippose = .635;
         }
+        flip.setPosition(flippose);
+        wristy.setPosition(wristpose);
+        twisty.setPosition(twistpose);
 
+    }
+    public class flippy{
+        public Servo flippy1;
+        public Servo flippy2;
+        AnalogInput flipencoder;
+        public void initialize(){
+            flippy1 = hardwareMap.get(Servo.class, "flippy1");
+            flippy2 = hardwareMap.get(Servo.class, "flippy2");
+            flipencoder = hardwareMap.get(AnalogInput.class, "flipencoder");
+        }
+        public void setPosition(double pos){
+            flippy1.setPosition(pos);
+            flippy2.setPosition(pos);
+        }
+        public double getPosition(){
+            return abs(1 - flipencoder.getVoltage() / 3.3);
+        }
     }
     public class spin{
         public CRServo spinny1;
@@ -430,7 +448,7 @@ public class Score5Auto extends OpMode {
         public void initialize(){
             spinny1 = hardwareMap.get(CRServo.class, "spinny1");
             spinny2 = hardwareMap.get(CRServo.class, "spinny2");
-            spinny1.setDirection(DcMotorSimple.Direction.REVERSE);
+            spinny2.setDirection(DcMotorSimple.Direction.REVERSE);
         }
         public void setPower(double power){
             spinny1.setPower(power);
@@ -438,6 +456,32 @@ public class Score5Auto extends OpMode {
         }
         public double getPower(){
             return spinny1.getPower();
+        }
+    }
+    public void safeflip(){
+        if(flipsafe == 2 && flip.getPosition() < .45){
+            twistpose = .56;
+            flipsafe = 1;
+        }
+    }
+    public void release(){
+        //Waits after dropping the block on the bar and then goes to pick
+        if(dropping == 2 && slidesPose < 10) {
+            if(special_pick == 2){
+                armtarget = 732;
+                wristpose = .46;
+                slidestarget = 0;
+                flippose = .025;
+                dropping = 1;
+                special_pick = 1;
+            }else {
+                armtarget = 732;
+                wristpose = .43;
+                slidestarget = 0;
+                flippose = .025;
+                flipsafe = 2;
+                dropping = 1;
+            }
         }
     }
 }

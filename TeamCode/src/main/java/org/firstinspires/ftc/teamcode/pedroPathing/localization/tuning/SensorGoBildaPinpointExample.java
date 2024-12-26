@@ -58,10 +58,9 @@ For support, contact tech@gobilda.com
 
 -Ethan Doak
  */
-
+@Disabled
 //TODO: If tuning comment out the @Disabled
 @TeleOp(name="goBILDA® PinPoint Odometry Example", group="Linear OpMode")
-@Disabled
 
 public class SensorGoBildaPinpointExample extends LinearOpMode {
 
@@ -103,7 +102,7 @@ public class SensorGoBildaPinpointExample extends LinearOpMode {
         increase when you move the robot forward. And the Y (strafe) pod should increase when
         you move the robot to the left.
          */
-        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
+        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
 
         /*

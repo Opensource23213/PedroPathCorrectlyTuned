@@ -59,7 +59,7 @@ public class ThreeWheelLocalizer extends Localizer {
     private double totalHeading;
     public static double FORWARD_TICKS_TO_INCHES = 0.0019745;//8192 * 1.37795 * 2 * Math.PI * 0.5008239963;
     public static double STRAFE_TICKS_TO_INCHES = 0.001963;//8192 * 1.37795 * 2 * Math.PI * 0.5018874659;
-    public static double TURN_TICKS_TO_RADIANS = 0.001994;//8192 * 1.37795 * 2 * Math.PI * 0.5;
+    public static double TURN_TICKS_TO_RADIANS = 0.001974;//8192 * 1.37795 * 2 * Math.PI * 0.5;
     /**
      * This creates a new ThreeWheelLocalizer from a HardwareMap, with a starting Pose at (0,0)
      * facing 0 heading.
