@@ -43,9 +43,9 @@ import java.util.concurrent.TimeUnit;
  * @version 1.0, 3/12/2024
  */
 @Config
-@Autonomous (name = "Score5", group = "AAA", preselectTeleOp = "Just5Tele"
+@Autonomous (name = "BlueWithBucket", group = "AAA", preselectTeleOp = "Codethatworks"
 )
-public class Score5Auto extends OpMode {
+public class BlueWithBucket extends OpMode {
     private Telemetry telemetryA;
 
     public static double DISTANCE = 40;
@@ -369,7 +369,12 @@ public class Score5Auto extends OpMode {
                     wristpose = .5;
                     twistpose = 0;
                     flippose = .635;
-                    forward = 20;
+                    if(missed == 1){
+                        forward = 20;
+                    }else {
+                        follower.followPath(score6);
+                        forward = 10.5;
+                    }
                 }else if(forward == 10.5){
                     follower.followPath(score6ish);
                     armtarget = 1619;
@@ -379,11 +384,11 @@ public class Score5Auto extends OpMode {
                     flippose = .522;
                     forward = 11;
                 }else if(forward == 11){
-                    armtarget = 1619;
-                    slidestarget = 1684;
-                    wristpose = .39;
+                    armtarget = 1635;
+                    slidestarget = 1634;
+                    wristpose = .4;
                     twistpose = 0;
-                    flippose = .522;
+                    flippose = .53;
                     follower.followPath(score6ish2);
                     forward = 12;
                 }else if(forward == 12){

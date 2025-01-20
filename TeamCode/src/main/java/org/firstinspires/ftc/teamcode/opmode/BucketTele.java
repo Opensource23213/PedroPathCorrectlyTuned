@@ -1,9 +1,4 @@
-package org.firstinspires.ftc.teamcode.pedroPathing.localization.tuning;
-
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftFrontMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftRearMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightFrontMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightRearMotorName;
+package org.firstinspires.ftc.teamcode.opmode;
 
 import static java.lang.Math.abs;
 
@@ -13,46 +8,38 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.hardware.rev.RevTouchSensor;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.opmode.FlippTele;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
-import org.firstinspires.ftc.teamcode.pedroPathing.localization.PoseUpdater;
+import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
+import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierCurve;
+import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierLine;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Path;
-import org.firstinspires.ftc.teamcode.pedroPathing.util.DashboardPoseTracker;
-import org.firstinspires.ftc.teamcode.pedroPathing.util.Drawing;
+import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-/**
- * This is the LocalizationTest OpMode. This is basically just a simple mecanum drive attached to a
- * PoseUpdater. The OpMode will print out the robot's pose to telemetry as well as draw the robot
- * on FTC Dashboard (192/168/43/1:8080/dash). You should use this to check the robot's localization.
- *
- * @author Anyi Lin - 10158 Scott's Bots
- * @version 1.0, 5/6/2024
- */
-@Config
 
-@TeleOp(group = "Pedro Pathing Tuning", name = "Localization Test")
-public class LocalizationTest extends OpMode {
+@Config
+@TeleOp(name="Bucket_Tele", group="ABC Opmode")
+//@Disabled
+public class BucketTele extends OpMode {
+
     private PIDController controller;
     private PIDController armcontroller;
+    public Follower follower;
 
     public static double p = 0.004, i = 0, d = 0;
 
@@ -115,6 +102,7 @@ public class LocalizationTest extends OpMode {
     public RevTouchSensor limitfront;
     public RevTouchSensor limitfront2;
     public DigitalChannel limitwrist1;
+    public DigitalChannel limitslide;
     public double r1press = 1;
     double press = 1;
     double slidesPose = 0;
@@ -127,7 +115,6 @@ public class LocalizationTest extends OpMode {
     double oldtarget = 0;
     double dpress = 1;
     public spin gripspinny;
-    public DigitalChannel limitwrist3;
     enum State {
         TRAJECTORY_1,   // First, follow a splineTo() trajectory
         TRAJECTORY_2,   // Then, follow a lineTo() trajectory
@@ -177,22 +164,11 @@ public class LocalizationTest extends OpMode {
     public double forward = 5;
     public double start_auto = 1;
     public double a = 1;
-    private PoseUpdater poseUpdater;
-    private DashboardPoseTracker dashboardPoseTracker;
-    private Telemetry telemetryA;
+    boolean slidelimit = true;
 
-    private DcMotorEx leftFront;
-    private DcMotorEx leftRear;
-    private DcMotorEx rightFront;
-    private DcMotorEx rightRear;
-    private List<DcMotorEx> motors;
-
-    /**
-     * This initializes the PoseUpdater, the mecanum drive motors, and the FTC Dashboard telemetry.
-     */
     @Override
     public void init() {
-        poseUpdater = new PoseUpdater(hardwareMap);
+        follower = new Follower(hardwareMap);
         controller = new PIDController(p, i, d);
         armcontroller = new PIDController(armp, armi, armd);
         gripspinny = new spin();
@@ -204,59 +180,61 @@ public class LocalizationTest extends OpMode {
         ArmPos = hardwareMap.get(AnalogInput.class, "ArmPos");
         wristy = hardwareMap.get(Servo.class, "wrist");
         twisty = hardwareMap.get(Servo.class, "twist");
-        limitwrist3 = hardwareMap.get(DigitalChannel.class, "limitwrist3");
+        front_left = hardwareMap.get(DcMotor.class, "front_left");
+        front_right = hardwareMap.get(DcMotor.class, "front_right");
+        rear_left = hardwareMap.get(DcMotor.class, "rear_left");
+        rear_right = hardwareMap.get(DcMotor.class, "rear_right");
         limitwrist1 = hardwareMap.get(DigitalChannel.class, "limitwrist1");
+        limitslide = hardwareMap.get(DigitalChannel.class, "limitslide");
         limitfront = hardwareMap.get(RevTouchSensor.class, "limitfront");
         limitfront2 = hardwareMap.get(RevTouchSensor.class, "limitfront2");
         wristencoder = hardwareMap.get(AnalogInput.class, "wristencoder");
+        comeback1 = new Path(new BezierCurve(new Point(26.8, 19, Point.CARTESIAN), new Point(20.2, 2.8, Point.CARTESIAN), new Point(16.9, -12.3, Point.CARTESIAN), new Point(10, -16.8, Point.CARTESIAN)));
+        comeback1.setConstantHeadingInterpolation(0);
+        comeback1ish = new Path(new BezierLine(new Point(10, -16.8, Point.CARTESIAN), new Point(4.1, -16.9, Point.CARTESIAN)));
+        comeback1ish.setConstantHeadingInterpolation(0);
+        score3 = new Path(new BezierCurve(new Point(6.1, -14.9, Point.CARTESIAN), new Point(12.1, .7, Point.CARTESIAN), new Point(17.3, 11.4, Point.CARTESIAN), new Point(27, 11.1, Point.CARTESIAN)));
+        score3.setConstantHeadingInterpolation(0);
+        score3ish = new Path(new BezierLine(new Point(27, 11.6, Point.CARTESIAN), new Point(31, 15.4, Point.CARTESIAN)));
+        score3ish.setConstantHeadingInterpolation(0);
+        gripspinny.setPower(0);
         slides.setDirection(DcMotor.Direction.REVERSE);
         slides.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         slides.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         Arm1.setDirection(DcMotor.Direction.REVERSE);
         Arm1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         Arm2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        front_left.setDirection(DcMotor.Direction.REVERSE);
+        front_right.setDirection(DcMotor.Direction.FORWARD);
+        rear_left.setDirection(DcMotor.Direction.REVERSE);
+        rear_right.setDirection(DcMotor.Direction.FORWARD);
+        front_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        front_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rear_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rear_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         buttons1 = new Button1();
         buttons2 = new Button2();
         flip = new flippy();
+        // Define a 1.5 second wait time
+        double waitTime1 = 1.5;
+        ElapsedTime waitTimer1 = new ElapsedTime();
         flip.initialize();
-        dashboardPoseTracker = new DashboardPoseTracker(poseUpdater);
+        follower.setPose(new Pose(0,0,0));
+        follower.setHeadingOffset(Math.toRadians(90));
+        // Define the angle for turn 2
+        double turnAngle2 = Math.toRadians(720);
+        boolean ready = false;
+        armtarget = (int) ((1 - ArmPos.getVoltage() - .2) / ticks * armticks);
+        slidestarget = 0;
 
-        leftFront = hardwareMap.get(DcMotorEx.class, leftFrontMotorName);
-        leftRear = hardwareMap.get(DcMotorEx.class, leftRearMotorName);
-        rightRear = hardwareMap.get(DcMotorEx.class, rightRearMotorName);
-        rightFront = hardwareMap.get(DcMotorEx.class, rightFrontMotorName);
-
-        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        motors = Arrays.asList(leftFront, leftRear, rightFront, rightRear);
-
-        for (DcMotorEx motor : motors) {
-            MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
-            motorConfigurationType.setAchieveableMaxRPMFraction(1.0);
-            motor.setMotorType(motorConfigurationType);
-        }
-
-        for (DcMotorEx motor : motors) {
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        }
-
-        telemetryA = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
-        telemetryA.addLine("This will print your robot's position to telemetry while "
-                + "allowing robot control through a basic mecanum drive on gamepad 1.");
-        telemetryA.update();
-
-        Drawing.drawRobot(poseUpdater.getPose(), "#4CAF50");
-        Drawing.sendPacket();
     }
 
-    /**
-     * This updates the robot's pose estimate, the simple mecanum drive, and updates the FTC
-     * Dashboard telemetry with the robot's position as well as draws the robot's position.
-     */
+
+
     @Override
     public void loop() {
         buttons2.button();
+        drive();
         arm();
         drop();
         spit();
@@ -271,36 +249,6 @@ public class LocalizationTest extends OpMode {
         servosafe();
         buttons1.button();
         release();
-        poseUpdater.update();
-        dashboardPoseTracker.update();
-
-        double y = -gamepad1.left_stick_y; // Remember, this is reversed!
-        double x = gamepad1.left_stick_x; // this is strafing
-        double rx = gamepad1.right_stick_x;
-
-        // Denominator is the largest motor power (absolute value) or 1
-        // This ensures all the powers maintain the same ratio, but only when
-        // at least one is out of the range [-1, 1]
-        double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-        double leftFrontPower = (y + x + rx) / denominator;
-        double leftRearPower = (y - x + rx) / denominator;
-        double rightFrontPower = (y - x - rx) / denominator;
-        double rightRearPower = (y + x - rx) / denominator;
-
-        leftFront.setPower(leftFrontPower);
-        leftRear.setPower(leftRearPower);
-        rightFront.setPower(rightFrontPower);
-        rightRear.setPower(rightRearPower);
-
-        telemetryA.addData("x", poseUpdater.getPose().getX() + 4.1);
-        telemetryA.addData("y", poseUpdater.getPose().getY() - 16.9 );
-        telemetryA.addData("heading", Math.toDegrees(poseUpdater.getPose().getHeading()));
-        telemetryA.addData("total heading", Math.toDegrees(poseUpdater.getTotalHeading()));
-        telemetryA.update();
-
-        Drawing.drawPoseHistory(dashboardPoseTracker, "#4CAF50");
-        Drawing.drawRobot(poseUpdater.getPose(), "#4CAF50");
-        Drawing.sendPacket();
     }
     public void arm(){
         toplimit = 1406 + (2 * slideticks * 2);
@@ -325,7 +273,20 @@ public class LocalizationTest extends OpMode {
                 slidestarget = (int) (-slides.getCurrentPosition() * 2);
             }
         } else {
-            slides.setPower(-power);
+            if(slidestarget == 0 && slidesPose < 10 && limitslide.getState()){
+                slides.setPower(.4);
+            }else {
+                if(!limitslide.getState() && slidelimit){
+                    slides.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    slides.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                    slidestarget = 1;
+                    slidelimit = false;
+                }else if(limitslide.getState()){
+                    slidelimit = true;
+                }
+                slides.setPower(-power);
+            }
+
         }
         armcontroller.setPID(armp, armi, armd);
         armPose = (1 - ArmPos.getVoltage() - .2) / ticks * armticks;
@@ -357,18 +318,14 @@ public class LocalizationTest extends OpMode {
         telemetry.addData("target", slidestarget);
         telemetry.addData("power", -power);
         telemetry.addData("Limit1", limitwrist1.getState());
-        telemetry.addData("Limit2", limitwrist3.getState());
+        telemetry.addData("Limitslide", limitslide.getState());
         telemetry.addData("Flippy position", flip.getPosition());
-        telemetry.addData("x", poseUpdater.getPose().getX());
-        telemetry.addData("y", poseUpdater.getPose().getY());
-        telemetry.addData("heading", Math.toDegrees(poseUpdater.getPose().getHeading()));
-        telemetry.addData("total heading", Math.toDegrees(poseUpdater.getTotalHeading()));
-        Drawing.drawPoseHistory(dashboardPoseTracker, "#4CAF50");
-        Drawing.drawRobot(poseUpdater.getPose(), "#4CAF50");
-        Drawing.sendPacket();
+        telemetry.addData("Heading", Math.toDegrees(follower.getPose().getHeading()));
+        telemetry.addData("X", Math.toDegrees(follower.getPose().getX()));
+        telemetry.addData("Y", Math.toDegrees(follower.getPose().getY()));
         telemetry.update();
         if(a == 2) {
-            wristy.setPosition(wristpose);
+            wristy.setPosition(wristpose - .04);
             twisty.setPosition(twistpose + .019);
             flip.setPosition(flippose);
         }
@@ -430,6 +387,7 @@ public class LocalizationTest extends OpMode {
             }
             endbutton();
             ButtonControl();
+            nowbutton = "";
         }
         public void ButtonControl(){
             if(nowbutton == "ps"){
@@ -459,10 +417,10 @@ public class LocalizationTest extends OpMode {
             }
             if(lastbutton == ""){
                 if (nowbutton == "l3") {
-                    armtarget = 2022;
+                    armtarget = 2210;
                     wristpose = .34;
                     twistpose = 0;
-                    slidestarget = 20;
+                    slidestarget = 0;
                     flippose = .583;
                     lastbutton = "l3";
                     nowbutton = "";
@@ -496,7 +454,7 @@ public class LocalizationTest extends OpMode {
                     slidestarget = (int) (2 * slideticks * 2);
                     wristpose = .293;
                     twistpose = 0;
-                    flippose = .613;
+                    flippose = .611;
                     gripspinny.setPower(-1);
                     lastbutton = "a";
                     nowbutton = "";
@@ -509,7 +467,7 @@ public class LocalizationTest extends OpMode {
                     nowbutton = "";
                     dpress = 1;
                 }
-                else if (nowbutton == "l1"){
+                /*else if (nowbutton == "l1"){
                     //Arm moves to hang specimen
                     armtarget = 732;
                     slidestarget = 648;
@@ -520,7 +478,7 @@ public class LocalizationTest extends OpMode {
                     lastbutton = "l1";
                     nowbutton = "";
                     dpress = 1;
-                }
+                }*/
                 else if(nowbutton == "r1"){
                     //Arm moves to pick up stuff from eddy
                     armtarget = 732;
@@ -557,7 +515,7 @@ public class LocalizationTest extends OpMode {
 
             }
             else if(lastbutton == "y"){
-                if(nowbutton == "y" || !limitwrist1.getState() || !limitwrist3.getState()){
+                if(nowbutton == "y" || !limitwrist1.getState()){
                     //raise arm to take off hook and bring arm in
                     armtarget = (int) 1742;
                     wristpose = .5;
@@ -570,7 +528,7 @@ public class LocalizationTest extends OpMode {
                 }
             }
             else if(lastbutton == "r1"){
-                if(nowbutton == "r1" || !limitwrist1.getState() || !limitwrist3.getState()){
+                if(nowbutton == "r1" || !limitwrist1.getState()){
                     //raise arm to take off hook and bring arm in
                     armtarget = 732;
                     slidestarget = 648;
@@ -593,7 +551,7 @@ public class LocalizationTest extends OpMode {
                 }
             }
             else if(lastbutton == "a"){
-                if(!limitwrist1.getState() || !limitwrist3.getState()){
+                if(!limitwrist1.getState()){
                     //brings arm back
                     wristpose = .281;
                     twistpose = 0;
@@ -781,17 +739,27 @@ public class LocalizationTest extends OpMode {
             }
             endbutton();
             ButtonControl();
+            nowbutton = "";
         }
         public void ButtonControl(){
             if(lastbutton == "") {
+                if (nowbutton == "l2" && buttons2.lastbutton == "l1") {
+                    //Arm drops block on the hang and goes back in
+                    wristpose = .5;
+                    slidestarget = 0;
+                    gripspinny.setPower(1);
+                    lastbutton = "";
+                    buttons2.lastbutton = "";
+                    nowbutton = "";
+
+                }
                 if (nowbutton == "r2") {
                     press = 2;
+                    buttons2.lastbutton = "";
                     nowbutton = "";
                     lastbutton = "";
                     dpress = 1;
-                }
-
-                else if (nowbutton == "r1") {
+                } else if (nowbutton == "r1") {
                     slidestarget = 548;
                     wristpose = .633;
                     twistpose = 0;
@@ -800,31 +768,13 @@ public class LocalizationTest extends OpMode {
                     gripspinny.setPower(-1);
                     nowbutton = "";
                     lastbutton = "r1";
-                }/* else if (nowbutton == "l2") {
-                    //Arm moves to pick up stuff from eddy
-                    armtarget = 732;
-                    wristpose = .43;
-                    slidestarget = 0;
-                    flippose = .025;
-                    flipsafe = 2;
-                    gripspinny.setPower(-1);
-                    start_auto = 2;
-                    lastbutton = "l2";
-                    nowbutton = "";
-                    dpress = 1;*/
-            }/*else if(lastbutton == "l2"){
-                if(nowbutton == "l2"){
-                    auto = !auto;
-                    follower.breakFollowing();
-                    nowbutton = "";
-                    lastbutton = "";
                 }
-            }*/
+            }
             else if(lastbutton == "r1"){
-                if(nowbutton == "r1" || !limitwrist1.getState() || !limitwrist3.getState()){
+                if(nowbutton == "r1" || !limitwrist1.getState()){
                     //raise arm to take off hook and bring arm in
                     armtarget = 0;
-                    slidestarget = 20;
+                    slidestarget = 0;
                     twistpose = 0;
                     wristpose = .281;
                     flippose = .561;
@@ -834,29 +784,9 @@ public class LocalizationTest extends OpMode {
                     nowbutton = "";
 
                 }
-            }/*
+            }
 
-            else if(lastbutton == "l1"){
-                if(!limitwrist1.getState() || !limitwrist3.getState()){
-                    //raise arm to take off hook and bring arm in
-                    ready = false;
-                    currentState = AsyncFollowingFSM.State.TRAJECTORY_3;
-                    drive.followTrajectorySequenceAsync(trajectory3);
-                    drivetime = new ElapsedTime();
-                    drive.setPoseEstimate(startPose);
-                    gripspinny.setPower(0);
-                    lastbutton = "";
-                    nowbutton = "";
 
-                }
-                if(nowbutton == "r2"){
-                    armtarget = 0;
-                    slidestarget = 0;
-                    gripspinny.setPower(0);
-                    wristpose = 0;
-                    nowbutton = "";
-                    lastbutton = "";
-                }*/
 
         }
         public void endbutton(){
@@ -922,7 +852,7 @@ public class LocalizationTest extends OpMode {
     }
     public void check(){
         if(dpress == 2 && slidesPose < 100){
-            if(!limitwrist1.getState() || !limitwrist3.getState()){
+            if(!limitwrist1.getState()){
                 dpress = 1;
             }else{
                 dpress = 3;
@@ -1009,7 +939,7 @@ public class LocalizationTest extends OpMode {
     }
     public void basketdrop(){
         if(rpress == 1.5){
-            if(abs(flip.getPosition() - flippose) < .01){
+            if(abs(flip.getPosition() - flippose) < .05){
                 rpress = 1.75;
             }
         } else if(rpress == 1.75){
@@ -1106,4 +1036,80 @@ public class LocalizationTest extends OpMode {
             }
         }
     }
+
+    public void drive(){
+        follower.update();
+        Pose poseEstimate = follower.getPose();
+        double angle = poseEstimate.getHeading();
+        double axial = 0;
+        double lateral = 0;
+        double yaw = 0;
+        if(gamepad1.dpad_right){ // strafe left
+            axial = 0;
+            lateral = .5;
+            yaw = 0;
+        }
+        else if(gamepad1.dpad_left){ // strafe right
+            axial = 0;
+            lateral = -.5;
+            yaw = 0;
+        }else if(gamepad1.dpad_down){ // strafe forward
+            axial = -.5;
+            lateral = 0;
+            yaw = 0;
+        }else if(gamepad1.dpad_up) { // Strafe backward
+            axial = .5;
+            lateral = 0;
+            yaw = 0;
+        }else{ // set control to the sticks
+            axial = -gamepad1.left_stick_y / (gamepad1.left_trigger + 1);  // Note: pushing stick forward gives negative value
+            lateral = gamepad1.left_stick_x / (gamepad1.left_trigger + 1);
+            yaw = gamepad1.right_stick_x / (gamepad1.left_trigger + 1);
+        }
+        double power_level = 1;
+        if (gamepad1.ps) {
+            telemetry.addData("Yaw", "Resetting\n");
+            follower.setPose(new Pose(poseEstimate.getX(), poseEstimate.getY(), 0));
+        }
+
+        //elbow1.setPosition(servo1pose);
+        //elbow2.setPosition(servo2pose);
+
+        double leftFrontPower = (axial + lateral + yaw) * power_level;
+        double rightFrontPower = (axial - lateral - yaw) * power_level;
+        double leftBackPower = (axial - lateral + yaw) * power_level;
+        double rightBackPower = (axial + lateral - yaw) * power_level;
+
+        // If the sticks are being used
+        if(!gamepad1.dpad_left & !gamepad1.dpad_right & !gamepad1.dpad_up & !gamepad1.dpad_down) {
+            double yaw_rad = /*orientation.getYaw(AngleUnit.RADIANS)*/angle + 3.14159 / 2;
+            double temp = axial * Math.sin(yaw_rad) + lateral * Math.cos(yaw_rad);
+            lateral = -axial * Math.cos(yaw_rad) + lateral * Math.sin(yaw_rad);
+            //double temp = axial * Math.cos(yaw_rad) + lateral * Math.sin(yaw_rad);
+            //lateral = -axial * Math.sin(yaw_rad) + lateral * Math.cos(yaw_rad);
+            axial = temp;
+        }
+        // Combie the joystick requests for each axis-motion to determine each wheel's power.
+        // Set up a variable for each drive wheel to save the power level for telemetry.
+        leftFrontPower = (axial + lateral + yaw) * power_level;
+        rightFrontPower = (axial - lateral - yaw) * power_level;
+        leftBackPower = (axial - lateral + yaw) * power_level;
+        rightBackPower = (axial + lateral - yaw) * power_level;
+        // Normalize the values so no wheel power exceeds 00%
+        // This ensures that the robot maintains the desired motion.
+        double max = Math.max(abs(leftFrontPower), abs(rightFrontPower));
+        max = Math.max(max, abs(leftBackPower));
+        max = Math.max(max, abs(rightBackPower));
+        if (max > 1.0) {
+            leftFrontPower /= max;
+            rightFrontPower /= max;
+            leftBackPower /= max;
+            rightBackPower /= max;
+        }//Arm code Shoulder
+        front_left.setPower(leftFrontPower);
+        front_right.setPower(rightFrontPower);
+        rear_left.setPower(leftBackPower);
+        rear_right.setPower(rightBackPower);
+    }
+
 }

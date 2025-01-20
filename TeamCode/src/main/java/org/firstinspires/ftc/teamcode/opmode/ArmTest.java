@@ -113,9 +113,11 @@ public class ArmTest extends OpMode {
         }
         if(gamepad1.a){
             //pick
-            flippose = .058;
-            wristpose = .535;
-            twistpose = .552;
+            armtarget = 0;
+            slidestarget = (int) (2 * slideticks * 2);
+            wristpose = .293;
+            twistpose = 0;
+            flippose = .613;
         }
         else if(gamepad1.b){
             //0
@@ -144,8 +146,8 @@ public class ArmTest extends OpMode {
     }
 
     public void arm(){
-        wrist_at = abs(1 - wristencoder.getVoltage() / 3.3);
-        toplimit = 1406 + (2 * slideticks * 2);
+        wrist_at = abs(1 - wristencoder.getVoltage() / 3.3) + .03;
+        toplimit = 1506 + (2 * slideticks * 2);
         controller.setPID(p, i, d);
         double newpos = -312;
         double slidesPose = -slides.getCurrentPosition() * 2;
@@ -200,8 +202,8 @@ public class ArmTest extends OpMode {
         telemetry.addData("Wrist position", wrist_at);
         telemetry.addData("Twist position", twisty.getPosition());
         telemetry.update();
-        wristy.setPosition(wristpose);
-        twisty.setPosition(twistpose);
+        wristy.setPosition(wristpose - .04);
+        twisty.setPosition(twistpose + .019);
         flip.setPosition(flippose);
     }
     public class spin{
