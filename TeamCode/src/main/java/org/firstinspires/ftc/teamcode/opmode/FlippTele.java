@@ -165,6 +165,7 @@ public class FlippTele extends OpMode {
     public double start_auto = 1;
     public double a = 1;
     boolean slidelimit = true;
+    public double yypress = 1.5;
 
     @Override
     public void init() {
@@ -241,6 +242,7 @@ public class FlippTele extends OpMode {
         extra_in();
         basket();
         dropoff();
+        dropoff2();
         eddy();
         basketdrop();
         spit2();
@@ -447,7 +449,7 @@ public class FlippTele extends OpMode {
                     gripspinny.setPower(-1);
                     dpress = 1;
                 }
-                else if(nowbutton == "a"){
+                else if(nowbutton == "a" && aapress == 1){
                     //Arm goes out
                     armtarget = 0;
                     a = 2;
@@ -613,6 +615,18 @@ public class FlippTele extends OpMode {
                     lastbutton = "";
                     nowbutton = "";
 
+                }
+                if(nowbutton == "r1"){
+                    armtarget = 732;
+                    wristpose = .43;
+                    slidestarget = 0;
+                    flippose = .025;
+                    a = 2;
+                    flipsafe = 2;
+                    yypress = 1.5;
+                    lastbutton = "r1";
+                    nowbutton = "";
+                    dpress = 1;
                 }
 
             }
@@ -934,6 +948,17 @@ public class FlippTele extends OpMode {
         }else if(ypress == 2 && runtime.time(TimeUnit.MILLISECONDS) > 200){
             gripspinny.setPower(0);
             ypress = 1;
+        }
+
+    }
+    public void dropoff2(){
+        if(yypress == 1.5 && abs(wrist_at - wristpose) < .04){
+            runtime = new ElapsedTime();
+            gripspinny.setPower(1);
+            yypress = 2;
+        }else if(yypress == 2 && runtime.time(TimeUnit.MILLISECONDS) > 200){
+            gripspinny.setPower(-1);
+            yypress = 1;
         }
 
     }
