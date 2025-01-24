@@ -146,7 +146,7 @@ public class ArmTest extends OpMode {
     }
 
     public void arm(){
-        wrist_at = abs(1 - wristencoder.getVoltage() / 3.3) + .03;
+        wrist_at = abs(1 - wristencoder.getVoltage() / 3.3) + .073;
         toplimit = 1506 + (2 * slideticks * 2);
         controller.setPID(p, i, d);
         double newpos = -312;

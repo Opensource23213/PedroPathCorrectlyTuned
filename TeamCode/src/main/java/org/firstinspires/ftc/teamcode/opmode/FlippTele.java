@@ -254,7 +254,7 @@ public class FlippTele extends OpMode {
     }
     public void arm(){
         toplimit = 1406 + (2 * slideticks * 2);
-        wrist_at = abs(1 - wristencoder.getVoltage() / 3.3);
+        wrist_at = abs(1 - wristencoder.getVoltage() / 3.3) + .013;
         controller.setPID(p, i, d);
         slidesPose = -slides.getCurrentPosition() * 2;
         armd = -slides.getCurrentPosition() / slideticks * .03 / 19.6;
@@ -271,7 +271,7 @@ public class FlippTele extends OpMode {
                 slides.setPower(0);
                 slidestarget = (int) (-slides.getCurrentPosition() * 2);
             } else {
-                slides.setPower(gamepad2.right_stick_y * .75);
+                slides.setPower(gamepad2.right_stick_y * .85);
                 slidestarget = (int) (-slides.getCurrentPosition() * 2);
             }
         } else {
@@ -322,6 +322,7 @@ public class FlippTele extends OpMode {
         telemetry.addData("Limit1", limitwrist1.getState());
         telemetry.addData("Limitslide", limitslide.getState());
         telemetry.addData("Flippy position", flip.getPosition());
+        telemetry.addData("Flippy position", wrist_at);
         telemetry.addData("Heading", Math.toDegrees(follower.getPose().getHeading()));
         telemetry.addData("X", Math.toDegrees(follower.getPose().getX()));
         telemetry.addData("Y", Math.toDegrees(follower.getPose().getY()));
@@ -442,7 +443,7 @@ public class FlippTele extends OpMode {
                     slidestarget = (int) oldtarget;
                     armtarget = 0;
                     flippose = .613;
-                    wristpose = .293;
+                    wristpose = .33;
                     nowbutton = "";
                     lastbutton = "a";
                     twistpose = 0;
@@ -454,7 +455,7 @@ public class FlippTele extends OpMode {
                     armtarget = 0;
                     a = 2;
                     slidestarget = (int) (2 * slideticks * 2);
-                    wristpose = .293;
+                    wristpose = .33;
                     twistpose = 0;
                     flippose = .611;
                     gripspinny.setPower(-1);
@@ -530,7 +531,7 @@ public class FlippTele extends OpMode {
                 }
             }
             else if(lastbutton == "r1"){
-                if(nowbutton == "r1" || !limitwrist1.getState()){
+                if(nowbutton == "r1" || !limitwrist1.getState() && yypress == 1){
                     //raise arm to take off hook and bring arm in
                     armtarget = 732;
                     slidestarget = 648;
