@@ -183,7 +183,7 @@ public class RedWithBucket extends OpMode {
         push2.setConstantHeadingInterpolation(0);
         push2ish.setConstantHeadingInterpolation(0);
         push3 = new Path(new BezierCurve(new Point(13.8, -40, Point.CARTESIAN), new Point(27.3, -39.9, Point.CARTESIAN), new Point(42, -40.7, Point.CARTESIAN), new Point(48, -41.3, Point.CARTESIAN),new Point(50.6, -46.8, Point.CARTESIAN)));
-        push3ish = new Path(new BezierCurve(new Point(50.6, -46.8, Point.CARTESIAN), new Point(39.2, -46.8, Point.CARTESIAN), new Point(16.7, -46.8, Point.CARTESIAN), new Point(3.8, -46.8, Point.CARTESIAN)));
+        push3ish = new Path(new BezierCurve(new Point(50.6, -46.8, Point.CARTESIAN), new Point(39.2, -46.8, Point.CARTESIAN), new Point(16.7, -46.8, Point.CARTESIAN), new Point(4.3, -46.8, Point.CARTESIAN)));
         push3.setConstantHeadingInterpolation(0);
         push3ish.setConstantHeadingInterpolation(0);
         score2 = new Path(new BezierCurve(new Point(4.7, -34, Point.CARTESIAN), new Point(9, -16.2, Point.CARTESIAN), new Point(13.3, -1.4, Point.CARTESIAN), new Point(20.6, 13.1, Point.CARTESIAN), new Point(28, 15.4, Point.CARTESIAN)));

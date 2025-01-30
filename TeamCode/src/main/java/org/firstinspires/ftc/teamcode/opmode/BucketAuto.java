@@ -246,7 +246,7 @@ public class BucketAuto extends OpMode {
                     if (forward == 1) {
                         drivetime.reset();
                         forward = 1.1;
-                    } else if (drivetime.time(TimeUnit.MILLISECONDS) > 1000 && forward == 1.1) {
+                    } else if (drivetime.time(TimeUnit.MILLISECONDS) > 600 && forward == 1.1) {
                         gripspinny.setPower(.2);
                         wristpose = .6;
                         drivetime.reset();
@@ -410,11 +410,14 @@ public class BucketAuto extends OpMode {
                             forward = 13;
                         }
                     } else if (forward == 13) {
-                        gripspinny.setPower(1);
+                        drivetime.reset();
+                        forward = 13.25;
+                    } else if(forward == 13.25 && drivetime.time(TimeUnit.MILLISECONDS) > 800){
+                        gripspinny.setPower(.5);
                         wristpose = .6;
                         drivetime.reset();
                         forward = 13.5;
-                    } else if(forward == 13.5 && drivetime.time(TimeUnit.MILLISECONDS) > 1000){
+                    }else if(forward == 13.5 && drivetime.time(TimeUnit.MILLISECONDS) > 300){
                         wristpose = .293;
                         flippose = .613;
                         if(abs(wristpose - wrist_at) < .05) {

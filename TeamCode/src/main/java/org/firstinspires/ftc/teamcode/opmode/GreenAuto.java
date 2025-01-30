@@ -43,9 +43,9 @@ import java.util.concurrent.TimeUnit;
  * @version 1.0, 3/12/2024
  */
 @Config
-@Autonomous (name = "Score5", group = "AAA", preselectTeleOp = "Just5Tele"
+@Autonomous (name = "GreenAuto", group = "AAA", preselectTeleOp = "Codethatworks"
 )
-public class Score5Auto extends OpMode {
+public class GreenAuto extends OpMode {
     private Telemetry telemetryA;
 
     public static double DISTANCE = 40;
@@ -202,9 +202,9 @@ public class Score5Auto extends OpMode {
         score5.setConstantHeadingInterpolation(0);
         score3ish = new Path(new BezierLine(new Point(28, 11.6, Point.CARTESIAN), new Point(31, 15.4, Point.CARTESIAN)));
         score3ish.setConstantHeadingInterpolation(0);
-        score6 = new Path(new BezierCurve(new Point(4.1, -14.9, Point.CARTESIAN), new Point(10.6, -12.4, Point.CARTESIAN), new Point(13.5, -5, Point.CARTESIAN), new Point(20, 0, Point.CARTESIAN), new Point(21, 10, Point.CARTESIAN), new Point(23, 15.2, Point.CARTESIAN)));
-        score6ish = new Path(new BezierCurve(new Point(23, 30.7, Point.CARTESIAN), new Point(23, 40.9, Point.CARTESIAN),new Point(20, 50.7, Point.CARTESIAN)));
-        score6ish2 = new Path(new BezierCurve(new Point(19, 57.9, Point.CARTESIAN), new Point(17, 64, Point.CARTESIAN), new Point(7.9, 71.4, Point.CARTESIAN)));
+        score6 = new Path(new BezierCurve(new Point(4.1, -14.9, Point.CARTESIAN), new Point(10.6, -12.4, Point.CARTESIAN), new Point(13, -5, Point.CARTESIAN), new Point(13, 0, Point.CARTESIAN), new Point(13, 10, Point.CARTESIAN), new Point(13, 15.2, Point.CARTESIAN)));
+        score6ish = new Path(new BezierCurve(new Point(13, 30.7, Point.CARTESIAN), new Point(13, 40.9, Point.CARTESIAN),new Point(13, 50.7, Point.CARTESIAN)));
+        score6ish2 = new Path(new BezierCurve(new Point(13, 57.9, Point.CARTESIAN), new Point(12, 64, Point.CARTESIAN), new Point(4.9, 71.4, Point.CARTESIAN)));
         MainCode = new PathChain(score6, score6ish);
         follower.followPath(score1);
         flip.initialize();
@@ -286,14 +286,9 @@ public class Score5Auto extends OpMode {
                     stick = 2;
                     follower.followPath(score2);
                     //forward = 4.5;
-                    count += 1;
+                    count++;
                     forward = 5;
-                } /*else if (forward == 4.5) {
-                    //scoot over after scoring
-                    follower.followPath(score2ish);
-                    count += 1;
-                    forward = 5;
-                }*/
+                }
             } else if(count <= 5) {
                 //loop for scoring all other blocks
                 if (forward == 5) {
@@ -303,12 +298,7 @@ public class Score5Auto extends OpMode {
                     slidestarget = 0;
                     if (count == 5) {
                         //used for the last pick to pick the yellow from the wall
-                        if(missed == 1){
-                            count -= 1;
-                            missed = 0;
-                        }else {
-                            special_pick = 2;
-                        }
+                        special_pick = 2;
                     }
                     dropping = 2;
                     follower.followPath(comeback1);
@@ -334,23 +324,11 @@ public class Score5Auto extends OpMode {
                     count += 1;
                     if(count == 5){
                         follower.followPath(score4);
-                        if(missed == 1){
-                            count -= 1;
-                            missed = 0;
-                        }
                         forward = 5;
                     }else if(count == 4){
-                        if(missed == 1){
-                            count -= 1;
-                            missed = 0;
-                        }
                         follower.followPath(score4);
                         forward = 6.5;
                     }else {
-                        if(missed == 1){
-                            count -= 1;
-                            missed = 0;
-                        }
                         forward = 5;
                         follower.followPath(score3);
                     }
@@ -369,7 +347,12 @@ public class Score5Auto extends OpMode {
                     wristpose = .5;
                     twistpose = 0;
                     flippose = .635;
-                    forward = 20;
+                    if(missed == 1){
+                        forward = 20;
+                    }else {
+                        follower.followPath(score6);
+                        forward = 10.5;
+                    }
                 }else if(forward == 10.5){
                     follower.followPath(score6ish);
                     armtarget = 1619;
@@ -377,13 +360,16 @@ public class Score5Auto extends OpMode {
                     wristpose = .39;
                     twistpose = 0;
                     flippose = .522;
+                    forward = 10.75;
+                }else if(forward == 10.75){
+                    drivetime.reset();
                     forward = 11;
-                }else if(forward == 11){
-                    armtarget = 1619;
-                    slidestarget = 1684;
-                    wristpose = .39;
+                }else if(forward == 11 && drivetime.time(TimeUnit.MILLISECONDS) > 100){
+                    armtarget = 1635;
+                    slidestarget = 1634;
+                    wristpose = .4;
                     twistpose = 0;
-                    flippose = .522;
+                    flippose = .53;
                     follower.followPath(score6ish2);
                     forward = 12;
                 }else if(forward == 12){
@@ -392,13 +378,13 @@ public class Score5Auto extends OpMode {
                 }
             }
             if(forward == 13){
-                if(drivetime.time(TimeUnit.MILLISECONDS) > 900){
-                    gripspinny.setPower(1);
+                if(drivetime.time(TimeUnit.MILLISECONDS) > 300){
+                    gripspinny.setPower(.4);
                     drivetime.reset();
                     forward = 14;
                 }
             }else if (forward == 14){
-                if(drivetime.time(TimeUnit.MILLISECONDS) > 300){
+                if(drivetime.time(TimeUnit.MILLISECONDS) > 200){
                     armtarget = 1619;
                     slidestarget = 0;
                     wristpose = .5;

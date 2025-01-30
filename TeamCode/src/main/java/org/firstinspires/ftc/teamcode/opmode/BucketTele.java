@@ -166,7 +166,7 @@ public class BucketTele extends OpMode {
     public double a = 1;
     boolean slidelimit = true;
     public double yypress = 1.5;
-
+    public double downish = 1;
     @Override
     public void init() {
         follower = new Follower(hardwareMap);
@@ -254,7 +254,7 @@ public class BucketTele extends OpMode {
     }
     public void arm(){
         toplimit = 1406 + (2 * slideticks * 2);
-        wrist_at = abs(1 - wristencoder.getVoltage() / 3.3);
+        wrist_at = abs(1 - wristencoder.getVoltage() / 3.3) + .013;
         controller.setPID(p, i, d);
         slidesPose = -slides.getCurrentPosition() * 2;
         armd = -slides.getCurrentPosition() / slideticks * .03 / 19.6;
@@ -271,7 +271,7 @@ public class BucketTele extends OpMode {
                 slides.setPower(0);
                 slidestarget = (int) (-slides.getCurrentPosition() * 2);
             } else {
-                slides.setPower(gamepad2.right_stick_y * .75);
+                slides.setPower(gamepad2.right_stick_y * .85);
                 slidestarget = (int) (-slides.getCurrentPosition() * 2);
             }
         } else {
@@ -322,6 +322,7 @@ public class BucketTele extends OpMode {
         telemetry.addData("Limit1", limitwrist1.getState());
         telemetry.addData("Limitslide", limitslide.getState());
         telemetry.addData("Flippy position", flip.getPosition());
+        telemetry.addData("Flippy position", wrist_at);
         telemetry.addData("Heading", Math.toDegrees(follower.getPose().getHeading()));
         telemetry.addData("X", Math.toDegrees(follower.getPose().getX()));
         telemetry.addData("Y", Math.toDegrees(follower.getPose().getY()));
@@ -381,9 +382,9 @@ public class BucketTele extends OpMode {
                 }
                 else if (gamepad2.right_stick_button){
                     button = "r3";
-                }else if (gamepad2.left_stick_y > .6){
+                }else if (gamepad2.left_stick_y > .3){
                     button = "lsy";
-                }else if (gamepad2.left_stick_y < -.6){
+                }else if (gamepad2.left_stick_y < -.3){
                     button = "lsyu";
                 }
             }
@@ -441,12 +442,13 @@ public class BucketTele extends OpMode {
                 if(dpress == 3 && nowbutton == "a"){
                     slidestarget = (int) oldtarget;
                     armtarget = 0;
-                    flippose = .613;
-                    wristpose = .293;
+                    flippose = .62;
+                    wristpose = .33;
                     nowbutton = "";
                     lastbutton = "a";
                     twistpose = 0;
                     gripspinny.setPower(-1);
+                    downish = 1;
                     dpress = 1;
                 }
                 else if(nowbutton == "a" && aapress == 1){
@@ -454,10 +456,11 @@ public class BucketTele extends OpMode {
                     armtarget = 0;
                     a = 2;
                     slidestarget = (int) (2 * slideticks * 2);
-                    wristpose = .293;
+                    wristpose = .33;
                     twistpose = 0;
-                    flippose = .611;
+                    flippose = .62;
                     gripspinny.setPower(-1);
+                    downish = 1;
                     lastbutton = "a";
                     nowbutton = "";
                     dpress = 1;
@@ -530,11 +533,11 @@ public class BucketTele extends OpMode {
                 }
             }
             else if(lastbutton == "r1"){
-                if(nowbutton == "r1" || !limitwrist1.getState()){
+                if(nowbutton == "r1" || !limitwrist1.getState() && yypress == 1){
                     //raise arm to take off hook and bring arm in
                     armtarget = 732;
                     slidestarget = 648;
-                    wristpose = .69;
+                    wristpose = .72;
                     twistpose = 0;
                     flippose = .651;
                     gripspinny.setPower(-1);
@@ -577,15 +580,24 @@ public class BucketTele extends OpMode {
                     nowbutton = "";
                     lastbutton = "";
                 }
-                if(nowbutton == "lsy"){
+                if(nowbutton == "lsy" && downish == 1){
+                    flippose = .645;
+                    armtarget = 0;
+                    wristpose = .293;
+                    downish = 2;
+                    nowbutton = "";
+                }
+                else if(nowbutton == "lsy" && downish == 2){
                     flippose = .692;
                     armtarget = 0;
                     wristpose = .293;
+                    downish = 1;
                     nowbutton = "";
                 }
                 if(nowbutton == "lsyu"){
                     wristpose = .281;
                     flippose = .613;
+                    downish = 1;
                     nowbutton = "";
                 }
                 else if(nowbutton == "right"){
@@ -691,10 +703,10 @@ public class BucketTele extends OpMode {
             else if (!gamepad2.right_stick_button && button == "r3"){
                 nowbutton = "r3";
                 button = "";
-            } else if (gamepad2.left_stick_y > .6){
+            } else if (gamepad2.left_stick_y < .3 && button == "lsy"){
                 nowbutton = "lsy";
                 button = "";
-            }else if (gamepad2.left_stick_y < -.6){
+            }else if (gamepad2.left_stick_y > -.3 && button == "lsyu"){
                 nowbutton = "lsyu";
                 button = "";
             }
@@ -969,9 +981,9 @@ public class BucketTele extends OpMode {
             }
         } else if(rpress == 1.75){
             runtime = new ElapsedTime();
-            gripspinny.setPower(.25);
+            gripspinny.setPower(.15);
             rpress = 2;
-        }else if(rpress == 2 && runtime.time(TimeUnit.MILLISECONDS) > 500){
+        }else if(rpress == 2 && runtime.time(TimeUnit.MILLISECONDS) > 600){
             gripspinny.setPower(0);
             flippose = .561;
             wristpose = .281;

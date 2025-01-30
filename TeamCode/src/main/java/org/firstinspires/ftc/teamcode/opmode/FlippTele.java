@@ -165,8 +165,8 @@ public class FlippTele extends OpMode {
     public double start_auto = 1;
     public double a = 1;
     boolean slidelimit = true;
-    public double yypress = 1.5;
-
+    public double yypress = 1;
+    public double downish = 1;
     @Override
     public void init() {
         follower = new Follower(hardwareMap);
@@ -382,9 +382,9 @@ public class FlippTele extends OpMode {
                 }
                 else if (gamepad2.right_stick_button){
                     button = "r3";
-                }else if (gamepad2.left_stick_y > .6){
+                }else if (gamepad2.left_stick_y > .3){
                     button = "lsy";
-                }else if (gamepad2.left_stick_y < -.6){
+                }else if (gamepad2.left_stick_y < -.3){
                     button = "lsyu";
                 }
             }
@@ -442,12 +442,13 @@ public class FlippTele extends OpMode {
                 if(dpress == 3 && nowbutton == "a"){
                     slidestarget = (int) oldtarget;
                     armtarget = 0;
-                    flippose = .613;
+                    flippose = .62;
                     wristpose = .33;
                     nowbutton = "";
                     lastbutton = "a";
                     twistpose = 0;
                     gripspinny.setPower(-1);
+                    downish = 1;
                     dpress = 1;
                 }
                 else if(nowbutton == "a" && aapress == 1){
@@ -457,8 +458,9 @@ public class FlippTele extends OpMode {
                     slidestarget = (int) (2 * slideticks * 2);
                     wristpose = .33;
                     twistpose = 0;
-                    flippose = .611;
+                    flippose = .62;
                     gripspinny.setPower(-1);
+                    downish = 1;
                     lastbutton = "a";
                     nowbutton = "";
                     dpress = 1;
@@ -535,7 +537,7 @@ public class FlippTele extends OpMode {
                     //raise arm to take off hook and bring arm in
                     armtarget = 732;
                     slidestarget = 648;
-                    wristpose = .69;
+                    wristpose = .72;
                     twistpose = 0;
                     flippose = .651;
                     gripspinny.setPower(-1);
@@ -578,15 +580,24 @@ public class FlippTele extends OpMode {
                     nowbutton = "";
                     lastbutton = "";
                 }
-                if(nowbutton == "lsy"){
+                if(nowbutton == "lsy" && downish == 1){
+                    flippose = .64;
+                    armtarget = 0;
+                    wristpose = .293;
+                    downish = 2;
+                    nowbutton = "";
+                }
+                else if(nowbutton == "lsy" && downish == 2){
                     flippose = .692;
                     armtarget = 0;
                     wristpose = .293;
+                    downish = 1;
                     nowbutton = "";
                 }
                 if(nowbutton == "lsyu"){
                     wristpose = .281;
                     flippose = .613;
+                    downish = 1;
                     nowbutton = "";
                 }
                 else if(nowbutton == "right"){
@@ -692,10 +703,10 @@ public class FlippTele extends OpMode {
             else if (!gamepad2.right_stick_button && button == "r3"){
                 nowbutton = "r3";
                 button = "";
-            } else if (gamepad2.left_stick_y > .6){
+            } else if (gamepad2.left_stick_y < .3 && button == "lsy"){
                 nowbutton = "lsy";
                 button = "";
-            }else if (gamepad2.left_stick_y < -.6){
+            }else if (gamepad2.left_stick_y > -.3 && button == "lsyu"){
                 nowbutton = "lsyu";
                 button = "";
             }
