@@ -115,6 +115,7 @@ public class FlippTele extends OpMode {
     double oldtarget = 0;
     double dpress = 1;
     public spin gripspinny;
+    public double spit = 1;
     enum State {
         TRAJECTORY_1,   // First, follow a splineTo() trajectory
         TRAJECTORY_2,   // Then, follow a lineTo() trajectory
@@ -167,6 +168,9 @@ public class FlippTele extends OpMode {
     boolean slidelimit = true;
     public double yypress = 1;
     public double downish = 1;
+    public double superextend = 1;
+    public double scoring = 1;
+    public double stick = 1;
     @Override
     public void init() {
         follower = new Follower(hardwareMap);
@@ -251,6 +255,9 @@ public class FlippTele extends OpMode {
         servosafe();
         buttons1.button();
         release();
+        gripspinny.onetwo();
+        longscore();
+        getwall();
     }
     public void arm(){
         toplimit = 1406 + (2 * slideticks * 2);
@@ -329,7 +336,7 @@ public class FlippTele extends OpMode {
         telemetry.update();
         if(a == 2) {
             wristy.setPosition(wristpose - .04);
-            twisty.setPosition(twistpose + .019);
+            twisty.setPosition(twistpose + .048);
             flip.setPosition(flippose);
         }
     }
@@ -451,7 +458,7 @@ public class FlippTele extends OpMode {
                     downish = 1;
                     dpress = 1;
                 }
-                else if(nowbutton == "a" && aapress == 1){
+                else if(nowbutton == "a" && aapress == 1 && spit == 1){
                     //Arm goes out
                     armtarget = 0;
                     a = 2;
@@ -537,7 +544,8 @@ public class FlippTele extends OpMode {
                     //raise arm to take off hook and bring arm in
                     armtarget = 732;
                     slidestarget = 648;
-                    wristpose = .72;
+                    stick = 2;
+                    wristpose = .25;
                     twistpose = 0;
                     flippose = .651;
                     gripspinny.setPower(-1);
@@ -565,7 +573,7 @@ public class FlippTele extends OpMode {
                     slidestarget = 0;
                     flippose = .561;
                     dpress = 2;
-                    aapress = 2;
+                    spit = 2;
                     nowbutton = "";
                     lastbutton = "";
                 } else if(nowbutton == "a"){
@@ -576,7 +584,7 @@ public class FlippTele extends OpMode {
                     oldtarget = slidesPose;
                     slidestarget = 0;
                     flippose = .561;
-                    aapress = 2;
+                    spit = 2;
                     nowbutton = "";
                     lastbutton = "";
                 }
@@ -628,17 +636,26 @@ public class FlippTele extends OpMode {
                     nowbutton = "";
 
                 }
-                if(nowbutton == "r1"){
+                else if(nowbutton == "r1"){
                     armtarget = 732;
-                    wristpose = .43;
-                    slidestarget = 0;
-                    flippose = .025;
-                    a = 2;
-                    flipsafe = 2;
-                    yypress = 1.5;
-                    lastbutton = "r1";
+                    slidestarget = 648;
+                    wristpose = .72;
+                    twistpose = 0;
+                    flippose = .651;
+                    gripspinny.setPower(-1);
+                    superextend = 1;
+                    lastbutton = "l1";
                     nowbutton = "";
                     dpress = 1;
+                }
+                else if(nowbutton == "up"){
+                    armtarget = 732;
+                    slidestarget = 1710;
+                    wristpose = .447;
+                    twistpose = 0;
+                    flippose = .605;
+                    superextend = 2;
+                    nowbutton = "";
                 }
 
             }
@@ -771,12 +788,22 @@ public class FlippTele extends OpMode {
             if(lastbutton == "") {
                 if (nowbutton == "l2" && buttons2.lastbutton == "l1") {
                     //Arm drops block on the hang and goes back in
-                    wristpose = .5;
-                    slidestarget = 0;
-                    gripspinny.setPower(1);
-                    lastbutton = "";
-                    buttons2.lastbutton = "";
-                    nowbutton = "";
+                    if(superextend == 2){
+                        scoring = 2;
+                        superextend = 1;
+                        wristpose = .34;
+                        flippose = .638;
+                        lastbutton = "";
+                        buttons2.lastbutton = "";
+                        nowbutton = "";
+                    }else {
+                        wristpose = .5;
+                        slidestarget = 0;
+                        gripspinny.setPower(1);
+                        lastbutton = "";
+                        buttons2.lastbutton = "";
+                        nowbutton = "";
+                    }
 
                 }
                 if (nowbutton == "r2") {
@@ -1026,10 +1053,28 @@ public class FlippTele extends OpMode {
             spinny2 = hardwareMap.get(CRServo.class, "spinny2");
             spinny2.setDirection(DcMotorSimple.Direction.REVERSE);
         }
+        public void onetwo(){
+            if(spit == 2){
+                drivetime.reset();
+                spinny1.setPower(-1);
+                spinny2.setPower(1);
+                spit = 3;
+            }else if(spit == 3 && drivetime.time(TimeUnit.MILLISECONDS) > 200){
+                drivetime.reset();
+                spinny1.setPower(1);
+                spinny2.setPower(-1);
+                spit = 4;
+            }else if(spit == 4 && drivetime.time(TimeUnit.MILLISECONDS) > 200){
+                spit = 1;
+                spinny1.setPower(0);
+                spinny2.setPower(0);
+            }
+        }
         public void setPower(double power){
             spinny1.setPower(power);
             spinny2.setPower(power);
         }
+
         public double getPower(){
             return spinny1.getPower();
         }
@@ -1049,8 +1094,9 @@ public class FlippTele extends OpMode {
             flippy1.setPosition(pos);
             flippy2.setPosition(pos);
         }
+
         public double getPosition(){
-            return abs(1 - flipencoder.getVoltage() / 3.3) + .03;
+            return abs(1 - flipencoder.getVoltage() / 3.3) + .02;
         }
     }
     public void release(){
@@ -1147,6 +1193,21 @@ public class FlippTele extends OpMode {
         front_right.setPower(rightFrontPower);
         rear_left.setPower(leftBackPower);
         rear_right.setPower(rightBackPower);
+    }
+    public void longscore(){
+        if(scoring == 2 && abs(wristpose - wrist_at) < .02){
+            gripspinny.setPower(1);
+            wristpose = .5;
+            flippose = .55;
+            slidestarget = 20;
+            scoring = 1;
+        }
+    }
+    public void getwall(){
+        if(stick == 2 && abs(wristpose - wrist_at) < .05){
+            wristpose = .72;
+            stick = 1;
+        }
     }
 
 }

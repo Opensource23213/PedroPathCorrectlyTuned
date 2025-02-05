@@ -174,7 +174,7 @@ public class BucketAuto extends OpMode {
         score1.setLinearHeadingInterpolation(0, Math.toRadians(317));
         push1 = new Path(new BezierCurve(new Point(3.3, 20.3, Point.CARTESIAN), new Point(6.3, 14.1, Point.CARTESIAN), new Point(13.2, 9.7, Point.CARTESIAN)));
         push1.setLinearHeadingInterpolation(Math.toRadians(317),0);
-        push1ish = new Path(new BezierLine(new Point(13.2, 9.7, Point.CARTESIAN), new Point(19.5, 10.1, Point.CARTESIAN)));
+        push1ish = new Path(new BezierLine(new Point(13.2, 9.7, Point.CARTESIAN), new Point(20.2, 10.1, Point.CARTESIAN)));
         push1ish.setConstantHeadingInterpolation(0);
         score2 = new Path(new BezierLine(new Point(25.2, 10.1, Point.CARTESIAN), new Point(13.4, 10.9, Point.CARTESIAN)));
         score2.setLinearHeadingInterpolation(0, Math.toRadians(317));
@@ -182,11 +182,11 @@ public class BucketAuto extends OpMode {
         score2ish.setConstantHeadingInterpolation(Math.toRadians(317));
         push2 = new Path(new BezierLine(new Point(3.3, 20.3, Point.CARTESIAN), new Point(9.1, 19.7, Point.CARTESIAN)));
         push2.setLinearHeadingInterpolation(Math.toRadians(317),0);
-        push2ish = new Path(new BezierCurve(new Point(9.1, 19.7, Point.CARTESIAN), new Point(15.3, 19.6, Point.CARTESIAN), new Point(16.3, 19.5, Point.CARTESIAN), new Point(19, 19.6, Point.CARTESIAN)));
+        push2ish = new Path(new BezierCurve(new Point(9.1, 19.7, Point.CARTESIAN), new Point(15.3, 19.6, Point.CARTESIAN), new Point(16.3, 19.5, Point.CARTESIAN), new Point(20.2, 19.6, Point.CARTESIAN)));
         push2ish.setConstantHeadingInterpolation(0);
         score3 = new Path(new BezierLine(new Point(25.2, 19.6, Point.CARTESIAN), new Point(12.7, 15.5, Point.CARTESIAN)));
         score3.setLinearHeadingInterpolation(0, Math.toRadians(317));
-        score3ish = new Path(new BezierCurve(new Point(12.7, 11.5, Point.CARTESIAN), new Point(8.2, 15.5, Point.CARTESIAN), new Point(6.4, 17.4, Point.CARTESIAN)));
+        score3ish = new Path(new BezierCurve(new Point(12.7, 11.5,Point.CARTESIAN), new Point(8.2, 15.5, Point.CARTESIAN), new Point(6.4, 17.4, Point.CARTESIAN)));
         score3ish.setConstantHeadingInterpolation(Math.toRadians(317));
         push3 = new Path(new BezierCurve(new Point(13, 11, Point.CARTESIAN), new Point(22.7, 7.5, Point.CARTESIAN), new Point(34.7, 9.7, Point.CARTESIAN)));
         push3.setLinearHeadingInterpolation(Math.toRadians(317),Math.toRadians(90));
@@ -271,10 +271,13 @@ public class BucketAuto extends OpMode {
                     } else if (forward == 2) {
                         follower.followPath(push1ish);
                         stopped = 1;
+                        forward = 2.5;
+                    }else if(forward == 2.5){
+                        drivetime.reset();
                         forward = 3;
-                    } else if (forward == 3) {
+                    }else if (forward == 3) {
                         if(!follower.isBusy()) {
-                            if (limitwrist1.getState()) {
+                            if (limitwrist1.getState() && drivetime.time(TimeUnit.MILLISECONDS) < 1500) {
                                 flippose = .692;
                                 armtarget = 0;
                                 wristpose = .293;
@@ -306,7 +309,7 @@ public class BucketAuto extends OpMode {
                         gripspinny.setPower(1);
                         drivetime.reset();
                         forward = 5.5;
-                    }else if(forward == 5.5 && drivetime.time(TimeUnit.MILLISECONDS) > 500){
+                    }else if(forward == 5.5 && drivetime.time(TimeUnit.MILLISECONDS) > 250){
                         wristpose = .293;
                         flippose = .613;
                         if(abs(wristpose - wrist_at) < .05) {
@@ -324,12 +327,16 @@ public class BucketAuto extends OpMode {
                     }else if (forward == 6) {
                         follower.followPath(push2ish);
                         stopped = 1;
+                        forward = 6.5;
+                    }
+                    if(forward == 6.5){
+                        drivetime.reset();
                         forward = 7;
                     }
                 }else{
                     if (forward == 7) {
                         if(!follower.isBusy()) {
-                            if (limitwrist1.getState()) {
+                            if (limitwrist1.getState() && drivetime.time(TimeUnit.MILLISECONDS) < 1500) {
                                 flippose = .692;
                                 armtarget = 0;
                                 wristpose = .293;
@@ -375,9 +382,12 @@ public class BucketAuto extends OpMode {
                     } else if (forward == 10) {
                         follower.followPath(push3ish);
                         stopped = 1;
+                        forward = 10.5;
+                    }else if(forward == 10.5){
+                        drivetime.reset();
                         forward = 11;
                     } else if (forward == 11) {
-                        if(limitwrist1.getState()){
+                        if(limitwrist1.getState() && drivetime.time(TimeUnit.MILLISECONDS) < 1500){
                             flippose = .692;
                             armtarget = 0;
                             wristpose = .293;
@@ -536,7 +546,7 @@ public class BucketAuto extends OpMode {
         }
         flip.setPosition(flippose);
         wristy.setPosition(wristpose - .04);
-        twisty.setPosition(twistpose + .019);
+        twisty.setPosition(twistpose + .048);
 
     }
     public class flippy{

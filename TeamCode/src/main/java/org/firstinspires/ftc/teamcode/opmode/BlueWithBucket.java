@@ -183,7 +183,7 @@ public class BlueWithBucket extends OpMode {
         push2.setConstantHeadingInterpolation(0);
         push2ish.setConstantHeadingInterpolation(0);
         push3 = new Path(new BezierCurve(new Point(13.8, -40, Point.CARTESIAN), new Point(27.3, -39.9, Point.CARTESIAN), new Point(42, -40.7, Point.CARTESIAN), new Point(48, -41.3, Point.CARTESIAN),new Point(50.6, -46.8, Point.CARTESIAN)));
-        push3ish = new Path(new BezierCurve(new Point(50.6, -46.8, Point.CARTESIAN), new Point(39.2, -46.8, Point.CARTESIAN), new Point(16.7, -46.8, Point.CARTESIAN), new Point(4.3, -46.8, Point.CARTESIAN)));
+        push3ish = new Path(new BezierCurve(new Point(50.6, -46.8, Point.CARTESIAN), new Point(39.2, -46.8, Point.CARTESIAN), new Point(16.7, -46.8, Point.CARTESIAN), new Point(3.5, -46.8, Point.CARTESIAN)));
         push3.setConstantHeadingInterpolation(0);
         push3ish.setConstantHeadingInterpolation(0);
         score2 = new Path(new BezierCurve(new Point(4.7, -34, Point.CARTESIAN), new Point(9, -16.2, Point.CARTESIAN), new Point(13.3, -1.4, Point.CARTESIAN), new Point(20.6, 13.1, Point.CARTESIAN), new Point(28, 15.4, Point.CARTESIAN)));
@@ -192,7 +192,7 @@ public class BlueWithBucket extends OpMode {
         score2ish.setConstantHeadingInterpolation(0);
         comeback1 = new Path(new BezierCurve(new Point(28.8, 19, Point.CARTESIAN), new Point(22.2, 2.8, Point.CARTESIAN), new Point(16.9, -12.3, Point.CARTESIAN), new Point(10, -16.8, Point.CARTESIAN)));
         comeback1.setConstantHeadingInterpolation(0);
-        comeback1ish = new Path(new BezierLine(new Point(10, -16.8, Point.CARTESIAN), new Point(3.1, -16.9, Point.CARTESIAN)));
+        comeback1ish = new Path(new BezierLine(new Point(10, -16.8, Point.CARTESIAN), new Point(2.4, -16.9, Point.CARTESIAN)));
         comeback1ish.setConstantHeadingInterpolation(0);
         score3 = new Path(new BezierCurve(new Point(6.1, -14.9, Point.CARTESIAN), new Point(12.1, .7, Point.CARTESIAN), new Point(17.3, 11.4, Point.CARTESIAN), new Point(27, 11.1, Point.CARTESIAN)));
         score3.setConstantHeadingInterpolation(0);
@@ -408,7 +408,7 @@ public class BlueWithBucket extends OpMode {
                     slidestarget = 0;
                     wristpose = .5;
                     twistpose = 0;
-                    flippose = .522;
+                    flippose = .3;
                 }
             }
         }
@@ -505,7 +505,7 @@ public class BlueWithBucket extends OpMode {
         }
         flip.setPosition(flippose);
         wristy.setPosition(wristpose - .04);
-        twisty.setPosition(twistpose + .019);
+        twisty.setPosition(twistpose + .048);
 
     }
     public class flippy{
