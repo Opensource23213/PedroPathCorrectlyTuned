@@ -65,6 +65,7 @@ public class FlippTele extends OpMode {
     private AnalogInput ArmPos = null;
     private Servo wristy = null;
     private Servo twisty = null;
+    private Servo light = null;
 
     double mode = 1;
     double county = 2;
@@ -194,6 +195,7 @@ public class FlippTele extends OpMode {
         limitfront = hardwareMap.get(RevTouchSensor.class, "limitfront");
         limitfront2 = hardwareMap.get(RevTouchSensor.class, "limitfront2");
         wristencoder = hardwareMap.get(AnalogInput.class, "wristencoder");
+        light = hardwareMap.get(Servo.class, "light");
         comeback1 = new Path(new BezierCurve(new Point(26.8, 19, Point.CARTESIAN), new Point(20.2, 2.8, Point.CARTESIAN), new Point(16.9, -12.3, Point.CARTESIAN), new Point(10, -16.8, Point.CARTESIAN)));
         comeback1.setConstantHeadingInterpolation(0);
         comeback1ish = new Path(new BezierLine(new Point(10, -16.8, Point.CARTESIAN), new Point(4.1, -16.9, Point.CARTESIAN)));
@@ -231,7 +233,7 @@ public class FlippTele extends OpMode {
         boolean ready = false;
         armtarget = (int) ((1 - ArmPos.getVoltage() - .2) / ticks * armticks);
         slidestarget = 0;
-
+        light.setPosition(1);
     }
 
 
@@ -285,7 +287,7 @@ public class FlippTele extends OpMode {
             if(slidestarget == 0 && slidesPose < 10 && limitslide.getState()){
                 slides.setPower(.4);
             }else {
-                if(!limitslide.getState() && slidelimit){
+                if(!limitslide.getState() && slidelimit && slidestarget < 20){
                     slides.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     slides.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     slidestarget = 1;
@@ -336,7 +338,7 @@ public class FlippTele extends OpMode {
         telemetry.update();
         if(a == 2) {
             wristy.setPosition(wristpose - .04);
-            twisty.setPosition(twistpose + .048);
+            twisty.setPosition(twistpose + .028);
             flip.setPosition(flippose);
         }
     }
@@ -589,7 +591,7 @@ public class FlippTele extends OpMode {
                     lastbutton = "";
                 }
                 if(nowbutton == "lsy" && downish == 1){
-                    flippose = .64;
+                    flippose = .632;
                     armtarget = 0;
                     wristpose = .293;
                     downish = 2;
@@ -638,24 +640,15 @@ public class FlippTele extends OpMode {
                 }
                 else if(nowbutton == "r1"){
                     armtarget = 732;
-                    slidestarget = 648;
-                    wristpose = .72;
-                    twistpose = 0;
-                    flippose = .651;
-                    gripspinny.setPower(-1);
-                    superextend = 1;
-                    lastbutton = "l1";
+                    wristpose = .43;
+                    slidestarget = 0;
+                    flippose = .025;
+                    a = 2;
+                    flipsafe = 2;
+                    yypress = 1.5;
+                    lastbutton = "r1";
                     nowbutton = "";
                     dpress = 1;
-                }
-                else if(nowbutton == "up"){
-                    armtarget = 732;
-                    slidestarget = 1710;
-                    wristpose = .447;
-                    twistpose = 0;
-                    flippose = .605;
-                    superextend = 2;
-                    nowbutton = "";
                 }
 
             }
@@ -786,25 +779,10 @@ public class FlippTele extends OpMode {
         }
         public void ButtonControl(){
             if(lastbutton == "") {
-                if (nowbutton == "l2" && buttons2.lastbutton == "l1") {
+                if (nowbutton == "l2") {
                     //Arm drops block on the hang and goes back in
-                    if(superextend == 2){
-                        scoring = 2;
-                        superextend = 1;
-                        wristpose = .34;
-                        flippose = .638;
-                        lastbutton = "";
-                        buttons2.lastbutton = "";
-                        nowbutton = "";
-                    }else {
-                        wristpose = .5;
-                        slidestarget = 0;
-                        gripspinny.setPower(1);
-                        lastbutton = "";
-                        buttons2.lastbutton = "";
-                        nowbutton = "";
-                    }
-
+                    buttons2.nowbutton = "l1";
+                    nowbutton = "";
                 }
                 if (nowbutton == "r2") {
                     press = 2;
@@ -993,9 +971,9 @@ public class FlippTele extends OpMode {
     public void dropoff2(){
         if(yypress == 1.5 && abs(wrist_at - wristpose) < .04){
             runtime = new ElapsedTime();
-            gripspinny.setPower(1);
+            gripspinny.setPower(.1);
             yypress = 2;
-        }else if(yypress == 2 && runtime.time(TimeUnit.MILLISECONDS) > 200){
+        }else if(yypress == 2 && runtime.time(TimeUnit.MILLISECONDS) > 400){
             gripspinny.setPower(-1);
             yypress = 1;
         }
@@ -1034,7 +1012,7 @@ public class FlippTele extends OpMode {
             flippose = .571;
             twistpose = 0;
             press = 3;
-        }else if(press == 3 && abs(abs(slidesPose) - abs(slidestarget)) < 700){
+        }else if(press == 3 && abs(abs(slidesPose) - abs(slidestarget)) < 300){
             ypress = 1.5;
             press = 4;
         }else if(press == 4 && ypress == 1){
@@ -1061,8 +1039,8 @@ public class FlippTele extends OpMode {
                 spit = 3;
             }else if(spit == 3 && drivetime.time(TimeUnit.MILLISECONDS) > 200){
                 drivetime.reset();
-                spinny1.setPower(1);
-                spinny2.setPower(-1);
+                spinny1.setPower(.7);
+                spinny2.setPower(-.7);
                 spit = 4;
             }else if(spit == 4 && drivetime.time(TimeUnit.MILLISECONDS) > 200){
                 spit = 1;

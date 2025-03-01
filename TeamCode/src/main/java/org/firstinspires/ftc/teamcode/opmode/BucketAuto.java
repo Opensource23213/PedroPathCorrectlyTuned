@@ -499,54 +499,34 @@ public class BucketAuto extends OpMode {
     }
     public void arm(){
         toplimit = 1406;
-        controller.setPID(p, i, d);
         wrist_at = abs(1 - wristencoder.getVoltage() / 3.3);
+        controller.setPID(p, i, d);
         slidesPose = -slides.getCurrentPosition() * 2;
         armd = -slides.getCurrentPosition()/slideticks * .03 / 19.6;
         armf = .001 + -slides.getCurrentPosition()/slideticks * .2 / 19.6;
         double pid = controller.calculate(slidesPose, slidestarget);
         double ff = Math.cos(Math.toRadians(slidestarget)) * f;
         double power = pid + ff;
-        if(-250 < slidesPose - slidestarget && slidesPose - slidestarget < 250 && (gamepad2.right_stick_y > .1 || gamepad2.right_stick_y < -.1)){
-            double otherPose = -slides.getCurrentPosition() / slideticks;
-            if (otherPose < bottomlimit && gamepad2.right_stick_y > 0){
-                slides.setPower(0);
-                slidestarget = (int) (-slides.getCurrentPosition() * 2);
-            }else if(otherPose > toplimit && gamepad2.right_stick_y < 0){
-                slides.setPower(0);
-                slidestarget = (int) (-slides.getCurrentPosition() * 2);
-            }else{
-                slides.setPower(gamepad2.right_stick_y/2);
-                slidestarget = (int) (-slides.getCurrentPosition() * 2);
-            }
-        }else {
-            slides.setPower(-power);
-        }
+        slides.setPower(-power);
         armcontroller.setPID(armp, armi, armd);
         armPose = (1 - ArmPos.getVoltage() - .2) / ticks * armticks;
         double armpid = controller.calculate(armPose, armtarget);
         double armff = Math.cos(Math.toRadians(armtarget)) * armf;
         double armpower = armpid + armff;
-        if(-200 < armPose - armtarget && armPose - armtarget < 200 && (gamepad2.left_stick_y > .1 || gamepad2.left_stick_y < -.1)){
-            Arm1.setPower(gamepad2.left_stick_y/2);
-            Arm2.setPower(gamepad2.left_stick_y/2);
-            armtarget = (int) (armPose);
-        }else {
-            Arm1.setPower(-armpower);
-            Arm2.setPower(-armpower);
-        }
+        Arm1.setPower(-armpower);
+        Arm2.setPower(-armpower);
         if(a == 1){
             a = 2;
-            armtarget = (int) 1742;
-            flippose = .6;
-            wristpose = .55;
-            slidestarget = 0;
+            armtarget = 732;
+            slidestarget = 648;
+            wristpose = .69;
             twistpose = 0;
-            drivetime.reset();
+            flippose = .651;
+            gripspinny.setPower(-1);
         }
         flip.setPosition(flippose);
         wristy.setPosition(wristpose - .04);
-        twisty.setPosition(twistpose + .048);
+        twisty.setPosition(twistpose + .028);
 
     }
     public class flippy{

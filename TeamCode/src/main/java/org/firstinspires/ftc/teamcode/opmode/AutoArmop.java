@@ -1,11 +1,14 @@
 package org.firstinspires.ftc.teamcode.opmode;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.sqrt;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.controller.PIDController;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.hardware.rev.RevTouchSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -19,9 +22,6 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierCurve;
@@ -33,9 +33,9 @@ import java.util.concurrent.TimeUnit;
 
 
 @Config
-@TeleOp(name="Bucket_Tele", group="ABC Opmode")
+@TeleOp(name="AutoArmop", group="ABC Opmode")
 //@Disabled
-public class BucketTele extends OpMode {
+public class AutoArmop extends OpMode {
 
     private PIDController controller;
     private PIDController armcontroller;
@@ -65,6 +65,7 @@ public class BucketTele extends OpMode {
     private AnalogInput ArmPos = null;
     private Servo wristy = null;
     private Servo twisty = null;
+    private Servo light = null;
 
     double mode = 1;
     double county = 2;
@@ -83,6 +84,7 @@ public class BucketTele extends OpMode {
     double armspecimen = 1380;
     double wristspecimen = .3;
     double twistspecimen = .5;
+    public double tx = 0;
     double armspecimenpickup = 60;
     double wristspecimenpickup = .51;
     double xpress = 1;
@@ -168,9 +170,10 @@ public class BucketTele extends OpMode {
     boolean slidelimit = true;
     public double yypress = 1;
     public double downish = 1;
-    public double superextend = 1;
     public double scoring = 1;
     public double stick = 1;
+    public boolean locked = false;
+    Limelight3A limelight;
     @Override
     public void init() {
         follower = new Follower(hardwareMap);
@@ -182,6 +185,7 @@ public class BucketTele extends OpMode {
         slides = hardwareMap.get(DcMotor.class, "slides"); //0 to -3.5 limit
         Arm1 = hardwareMap.get(DcMotor.class, "Arm1");
         Arm2 = hardwareMap.get(DcMotor.class, "Arm2");
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
         ArmPos = hardwareMap.get(AnalogInput.class, "ArmPos");
         wristy = hardwareMap.get(Servo.class, "wrist");
         twisty = hardwareMap.get(Servo.class, "twist");
@@ -194,6 +198,10 @@ public class BucketTele extends OpMode {
         limitfront = hardwareMap.get(RevTouchSensor.class, "limitfront");
         limitfront2 = hardwareMap.get(RevTouchSensor.class, "limitfront2");
         wristencoder = hardwareMap.get(AnalogInput.class, "wristencoder");
+        light = hardwareMap.get(Servo.class, "light");
+        limelight.setPollRateHz(100); // This sets how often we ask Limelight for data (100 times per second)
+        limelight.start(); // This tells Limelight to start looking!
+        limelight.pipelineSwitch(0);
         comeback1 = new Path(new BezierCurve(new Point(26.8, 19, Point.CARTESIAN), new Point(20.2, 2.8, Point.CARTESIAN), new Point(16.9, -12.3, Point.CARTESIAN), new Point(10, -16.8, Point.CARTESIAN)));
         comeback1.setConstantHeadingInterpolation(0);
         comeback1ish = new Path(new BezierLine(new Point(10, -16.8, Point.CARTESIAN), new Point(4.1, -16.9, Point.CARTESIAN)));
@@ -225,13 +233,12 @@ public class BucketTele extends OpMode {
         ElapsedTime waitTimer1 = new ElapsedTime();
         flip.initialize();
         follower.setPose(new Pose(0,0,0));
-        follower.setHeadingOffset(Math.toRadians(90));
+        follower.setHeadingOffset(Math.toRadians(133));
         // Define the angle for turn 2
         double turnAngle2 = Math.toRadians(720);
         boolean ready = false;
         armtarget = (int) ((1 - ArmPos.getVoltage() - .2) / ticks * armticks);
         slidestarget = 0;
-
     }
 
 
@@ -258,6 +265,7 @@ public class BucketTele extends OpMode {
         gripspinny.onetwo();
         longscore();
         getwall();
+        autotwist();
     }
     public void arm(){
         toplimit = 1406 + (2 * slideticks * 2);
@@ -265,11 +273,11 @@ public class BucketTele extends OpMode {
         controller.setPID(p, i, d);
         slidesPose = -slides.getCurrentPosition() * 2;
         armd = -slides.getCurrentPosition() / slideticks * .03 / 19.6;
-        armf = .001 + -slides.getCurrentPosition() / slideticks * .2 / 19.6;
+        armf = .001 + -slides.getCurrentPosition() / slideticks * .2 / 19;
         double pid = controller.calculate(slidesPose, slidestarget);
         double ff = Math.cos(Math.toRadians(slidestarget)) * f;
         double power = pid + ff;
-        if (-250 < slidesPose - slidestarget && slidesPose - slidestarget < 250 && ((gamepad2.right_stick_y > .1 || gamepad2.right_stick_y < -.1))&& !auto) {
+        if (-250 < slidesPose - slidestarget && slidesPose - slidestarget < 250 && ((gamepad2.right_stick_y > .1 || gamepad2.right_stick_y < -.1))&& !locked) {
             double otherPose = -slides.getCurrentPosition() / slideticks;
             if (!gamepad2.ps && otherPose < bottomlimit && gamepad2.right_stick_y > 0) {
                 slides.setPower(0);
@@ -414,12 +422,14 @@ public class BucketTele extends OpMode {
             }
             if(nowbutton == "r2"){
                 a = 2;
+                light.setPosition(0);
                 wristpose = .5;
                 twistpose = 0;
                 armtarget = 0;
                 slidestarget = 0;
                 flippose = .561;
                 safety = 2;
+                locked = false;
                 gripspinny.setPower(0);
                 lastbutton = "";
                 nowbutton = "";
@@ -432,6 +442,7 @@ public class BucketTele extends OpMode {
                     twistpose = 0;
                     slidestarget = 0;
                     flippose = .583;
+                    light.setPosition(0);
                     lastbutton = "l3";
                     nowbutton = "";
                     dpress = 1;
@@ -442,30 +453,20 @@ public class BucketTele extends OpMode {
                     flippose = .561;
                     basketmove = 2;
                     twistpose = 0;
+                    light.setPosition(0);
                     lastbutton = "r3";
                     nowbutton = "";
-                    dpress = 1;
-                }
-                if(dpress == 3 && nowbutton == "a"){
-                    slidestarget = (int) oldtarget;
-                    armtarget = 0;
-                    flippose = .62;
-                    wristpose = .33;
-                    nowbutton = "";
-                    lastbutton = "a";
-                    twistpose = 0;
-                    gripspinny.setPower(-1);
-                    downish = 1;
                     dpress = 1;
                 }
                 else if(nowbutton == "a" && aapress == 1 && spit == 1){
                     //Arm goes out
                     armtarget = 0;
+                    light.setPosition(1);
                     a = 2;
                     slidestarget = (int) (2 * slideticks * 2);
                     wristpose = .33;
                     twistpose = 0;
-                    flippose = .62;
+                    flippose = .56;
                     gripspinny.setPower(-1);
                     downish = 1;
                     lastbutton = "a";
@@ -497,6 +498,7 @@ public class BucketTele extends OpMode {
                     wristpose = .43;
                     slidestarget = 0;
                     flippose = .025;
+                    light.setPosition(0);
                     a = 2;
                     flipsafe = 2;
                     gripspinny.setPower(-1);
@@ -508,6 +510,7 @@ public class BucketTele extends OpMode {
                     //Arm moves to pick up stuff from eddy
                     armtarget = 732;
                     wristpose = .43;
+                    light.setPosition(0);
                     slidestarget = 0;
                     flippose = .025;
                     twistpose = 0;
@@ -574,6 +577,8 @@ public class BucketTele extends OpMode {
                     flippose = .561;
                     dpress = 2;
                     spit = 2;
+                    downish = 1;
+                    locked = false;
                     nowbutton = "";
                     lastbutton = "";
                 } else if(nowbutton == "a"){
@@ -585,26 +590,22 @@ public class BucketTele extends OpMode {
                     slidestarget = 0;
                     flippose = .561;
                     spit = 2;
+                    downish = 1;
+                    locked = false;
                     nowbutton = "";
                     lastbutton = "";
                 }
-                if(nowbutton == "lsy" && downish == 1){
-                    flippose = .632;
-                    armtarget = 0;
-                    wristpose = .293;
-                    downish = 2;
-                    nowbutton = "";
-                }
-                else if(nowbutton == "lsy" && downish == 2){
+                if(nowbutton == "lsy"){
                     flippose = .692;
                     armtarget = 0;
                     wristpose = .293;
-                    downish = 1;
+                    downish = 2;
+                    locked = false;
                     nowbutton = "";
                 }
                 if(nowbutton == "lsyu"){
                     wristpose = .281;
-                    flippose = .613;
+                    flippose = .56;
                     downish = 1;
                     nowbutton = "";
                 }
@@ -1032,15 +1033,15 @@ public class BucketTele extends OpMode {
         public void onetwo(){
             if(spit == 2){
                 drivetime.reset();
-                spinny1.setPower(-1);
-                spinny2.setPower(1);
+                spinny1.setPower(-.4);
+                spinny2.setPower(.4);
                 spit = 3;
-            }else if(spit == 3 && drivetime.time(TimeUnit.MILLISECONDS) > 100){
+            }else if(spit == 3 && drivetime.time(TimeUnit.MILLISECONDS) > 200){
                 drivetime.reset();
-                spinny1.setPower(1);
-                spinny2.setPower(-1);
+                spinny1.setPower(.4);
+                spinny2.setPower(-.4);
                 spit = 4;
-            }else if(spit == 4 && drivetime.time(TimeUnit.MILLISECONDS) > 100){
+            }else if(spit == 4 && drivetime.time(TimeUnit.MILLISECONDS) > 200){
                 spit = 1;
                 spinny1.setPower(0);
                 spinny2.setPower(0);
@@ -1150,6 +1151,22 @@ public class BucketTele extends OpMode {
         }
         // Combie the joystick requests for each axis-motion to determine each wheel's power.
         // Set up a variable for each drive wheel to save the power level for telemetry.
+        if(locked){
+            if(tx > 1) {
+                if(tx < 3){
+                    lateral = .2;
+                }else {
+                    lateral = .35;
+                }
+            }
+            else if (tx < -1){
+                if (tx > -3){
+                    lateral = -.2;
+                }else {
+                    lateral = -.35;
+                }
+            }
+        }
         leftFrontPower = (axial + lateral + yaw) * power_level;
         rightFrontPower = (axial - lateral - yaw) * power_level;
         leftBackPower = (axial - lateral + yaw) * power_level;
@@ -1183,6 +1200,29 @@ public class BucketTele extends OpMode {
         if(stick == 2 && abs(wristpose - wrist_at) < .05){
             wristpose = .72;
             stick = 1;
+        }
+    }
+    public void autotwist(){
+        if(buttons2.lastbutton == "a" && downish == 1) {
+            LLResult result = limelight.getLatestResult();
+            locked = result != null && result.isValid();
+            if (result != null && result.isValid()) {
+                tx = result.getTx(); // How far left or right the target is (degrees)
+                double ty = result.getTy(); // How far up or down the target is (degrees)
+                double ta = result.getTa() + (ty + 13) * .3514583; // How big the target looks (0%-100% of the image)
+                slidestarget += ty*3;
+                String angle = "normal";
+                if(ty < 1 && ty > -1 && tx > -2 && tx < 2){
+                    buttons2.nowbutton = "lsy";
+                }
+                angle = "Too far";
+                telemetry.addData("Target X", tx);
+                telemetry.addData("Target Y", ty);
+                telemetry.addData("Target Area", ta);
+                telemetry.addData("Orientation", angle);
+            } else {
+                telemetry.addData("Limelight", "No Targets");
+            }
         }
     }
 
